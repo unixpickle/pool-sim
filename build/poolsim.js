@@ -136,7 +136,169 @@ function withBackup(particles, f) {
   backup.copyTo(particles);
   return res;
 }
-const exported = {};
+const BALL_COLORS = [
+  'white',
+  '#ffc900',
+  '#002c52',
+  '#b70016',
+  '#37264a',
+  '#ce3527',
+  '#1b4329',
+  '#542c2d',
+  '#232323',
+];
+
+class Ball extends Particle {
+  constructor(x, y, radius, number) {
+    super(x, y);
+    this.radius = radius;
+    this.number = number;
+    console.log(this.number);
+  }
+
+  draw(ctx) {
+    if (this.number <= 8) {
+      ctx.fillStyle = BALL_COLORS[this.number];
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.save();
+
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      ctx.fillStyle = 'white';
+      ctx.fill();
+
+      ctx.fillStyle = BALL_COLORS[this.number - 8];
+      ctx.fillRect(this.x - this.radius, this.y - this.radius / 2, this.radius * 2, this.radius);
+
+      ctx.restore();
+    }
+  }
+}
+
+class Collision {
+  constructor(normal) {
+    this.normal = normal;
+  }
+}
+
+class Barrier {
+  draw(ctx) {
+    throw new Error('not implemented');
+  }
+
+  collision(ball) {
+    throw new Error('not implemented');
+  }
+}
+
+class RectBarrier extends Barrier {
+  constructor(x, y, width, height) {
+    super();
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  draw(ctx) {
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+}
+
+class TriangleBarrier extends Barrier {
+  constructor(x1, y1, x2, y2) {
+    super();
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
+  }
+
+  x3() {
+    return this.x1;
+  }
+
+  y3() {
+    return this.y2;
+  }
+
+  draw(ctx) {
+    ctx.beginPath();
+    ctx.moveTo(this.x1, this.y1);
+    ctx.lineTo(this.x2, this.y2);
+    ctx.lineTo(this.x3(), this.y3());
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+const TABLE_WIDTH = 0.5;
+const TABLE_HEIGHT = 1.0;
+const BALL_RADIUS = (21 / 8 / 88 / 2);
+const CORNER_SPACE = 0.03;
+
+// The raw game dynamics for pool. Does not include rules,
+// just hitting balls into pockets.
+class Table {
+  constructor() {
+    this.whiteBall = new Ball(TABLE_WIDTH / 2, TABLE_HEIGHT * 0.8, BALL_RADIUS, 0);
+    this.liveBalls = [this.whiteBall];
+    this.sunkBalls = [];
+    this.barriers = [];
+    this._createLiveBalls();
+    this._createBarriers();
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = 'green';
+    ctx.fillRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT);
+    this.liveBalls.forEach((b) => b.draw(ctx));
+    ctx.fillStyle = 'brown';
+    this.barriers.forEach((b) => b.draw(ctx));
+  }
+
+  _createLiveBalls() {
+    let ballNumber = 15;
+    for (let row = 0; row < 5; ++row) {
+      const count = 5 - row;
+      const rowY = TABLE_HEIGHT * 0.2 + BALL_RADIUS * 2 * row;
+      const rowX = TABLE_WIDTH / 2 - BALL_RADIUS * count;
+      for (let i = 0; i < count; ++i) {
+        const ball = new Ball(rowX + i * BALL_RADIUS * 2, rowY, BALL_RADIUS, ballNumber--);
+        this.liveBalls.push(ball);
+      }
+    }
+  }
+
+  _createBarriers() {
+    const cs2 = CORNER_SPACE * 2;
+    this.barriers.push(new RectBarrier(CORNER_SPACE, -0.1, TABLE_WIDTH - cs2, 0.1));
+    this.barriers.push(new RectBarrier(CORNER_SPACE, TABLE_HEIGHT, TABLE_WIDTH - cs2, 0.1));
+    this.barriers.push(new RectBarrier(-0.1, CORNER_SPACE, 0.1, TABLE_HEIGHT - cs2));
+    this.barriers.push(new RectBarrier(TABLE_WIDTH, CORNER_SPACE, 0.1, TABLE_HEIGHT - cs2));
+  }
+}
+const exported = {
+  Particle: Particle,
+  ForceField: ForceField,
+  eulerStep: eulerStep,
+  rk4Step: rk4Step,
+
+  Ball: Ball,
+  Collision: Collision,
+  Barrier: Barrier,
+  RectBarrier: RectBarrier,
+  TriangleBarrier: TriangleBarrier,
+
+  TABLE_WIDTH: TABLE_WIDTH,
+  TABLE_HEIGHT: TABLE_HEIGHT,
+  BALL_RADIUS: BALL_RADIUS,
+  Table: Table,
+};
 
 if ('undefined' !== typeof window) {
   window.poolsim = exported;
