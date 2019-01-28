@@ -20,6 +20,8 @@ class Table {
   }
 
   draw(ctx) {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(-WALL_WIDTH, -WALL_WIDTH, TABLE_WIDTH + WALL_WIDTH * 2, TABLE_HEIGHT + WALL_WIDTH * 2);
     ctx.fillStyle = 'green';
     ctx.fillRect(-GREEN_PAD, -GREEN_PAD, TABLE_WIDTH + GREEN_PAD * 2, TABLE_HEIGHT + GREEN_PAD * 2);
     this.liveBalls.forEach((b) => b.draw(ctx));
