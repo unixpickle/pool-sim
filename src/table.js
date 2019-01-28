@@ -1,7 +1,11 @@
 const TABLE_WIDTH = 0.5;
 const TABLE_HEIGHT = 1.0;
 const BALL_RADIUS = (21 / 8 / 88 / 2);
-const CORNER_SPACE = 0.03;
+const CORNER_SPACE = 0.05;
+const POCKET_SIZE = 0.05;
+const GREEN_PAD = 0.02;
+const WALL_WIDTH = 0.15;
+const TRIANGLE_SIZE = 0.02;
 
 // The raw game dynamics for pool. Does not include rules,
 // just hitting balls into pockets.
@@ -17,7 +21,7 @@ class Table {
 
   draw(ctx) {
     ctx.fillStyle = 'green';
-    ctx.fillRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT);
+    ctx.fillRect(-GREEN_PAD, -GREEN_PAD, TABLE_WIDTH + GREEN_PAD * 2, TABLE_HEIGHT + GREEN_PAD * 2);
     this.liveBalls.forEach((b) => b.draw(ctx));
     ctx.fillStyle = 'brown';
     this.barriers.forEach((b) => b.draw(ctx));
@@ -38,9 +42,21 @@ class Table {
 
   _createBarriers() {
     const cs2 = CORNER_SPACE * 2;
-    this.barriers.push(new RectBarrier(CORNER_SPACE, -0.1, TABLE_WIDTH - cs2, 0.1));
-    this.barriers.push(new RectBarrier(CORNER_SPACE, TABLE_HEIGHT, TABLE_WIDTH - cs2, 0.1));
-    this.barriers.push(new RectBarrier(-0.1, CORNER_SPACE, 0.1, TABLE_HEIGHT - cs2));
-    this.barriers.push(new RectBarrier(TABLE_WIDTH, CORNER_SPACE, 0.1, TABLE_HEIGHT - cs2));
+    this.barriers.push(new RectBarrier(CORNER_SPACE, -WALL_WIDTH, TABLE_WIDTH - cs2, WALL_WIDTH));
+    this.barriers.push(new RectBarrier(CORNER_SPACE, TABLE_HEIGHT, TABLE_WIDTH - cs2, WALL_WIDTH));
+    [-WALL_WIDTH, TABLE_WIDTH].forEach((x) => {
+      this.barriers.push(new RectBarrier(x, CORNER_SPACE, WALL_WIDTH,
+        TABLE_HEIGHT / 2 - CORNER_SPACE - POCKET_SIZE));
+      this.barriers.push(new RectBarrier(x, TABLE_HEIGHT / 2 + POCKET_SIZE, WALL_WIDTH,
+        TABLE_HEIGHT / 2 - CORNER_SPACE - POCKET_SIZE));
+    });
+    this.barriers.push(new TriangleBarrier(-TRIANGLE_SIZE,
+      TABLE_HEIGHT / 2 - POCKET_SIZE + TRIANGLE_SIZE, 0, TABLE_HEIGHT / 2 - POCKET_SIZE));
+    this.barriers.push(new TriangleBarrier(-TRIANGLE_SIZE,
+      TABLE_HEIGHT / 2 + POCKET_SIZE - TRIANGLE_SIZE, 0, TABLE_HEIGHT / 2 + POCKET_SIZE));
+    this.barriers.push(new TriangleBarrier(TABLE_WIDTH + TRIANGLE_SIZE,
+      TABLE_HEIGHT / 2 - POCKET_SIZE + TRIANGLE_SIZE, TABLE_WIDTH, TABLE_HEIGHT / 2 - POCKET_SIZE));
+    this.barriers.push(new TriangleBarrier(TABLE_WIDTH + TRIANGLE_SIZE,
+      TABLE_HEIGHT / 2 + POCKET_SIZE - TRIANGLE_SIZE, TABLE_WIDTH, TABLE_HEIGHT / 2 + POCKET_SIZE));
   }
 }
