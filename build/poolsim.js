@@ -288,14 +288,42 @@ class Table {
       this.barriers.push(new RectBarrier(x, TABLE_HEIGHT / 2 + POCKET_SIZE, WALL_WIDTH,
         TABLE_HEIGHT / 2 - CORNER_SPACE - POCKET_SIZE));
     });
+
+    // Left triangles.
     this.barriers.push(new TriangleBarrier(-TRIANGLE_SIZE,
       TABLE_HEIGHT / 2 - POCKET_SIZE + TRIANGLE_SIZE, 0, TABLE_HEIGHT / 2 - POCKET_SIZE));
     this.barriers.push(new TriangleBarrier(-TRIANGLE_SIZE,
       TABLE_HEIGHT / 2 + POCKET_SIZE - TRIANGLE_SIZE, 0, TABLE_HEIGHT / 2 + POCKET_SIZE));
+
+    // Right triangles.
     this.barriers.push(new TriangleBarrier(TABLE_WIDTH + TRIANGLE_SIZE,
       TABLE_HEIGHT / 2 - POCKET_SIZE + TRIANGLE_SIZE, TABLE_WIDTH, TABLE_HEIGHT / 2 - POCKET_SIZE));
     this.barriers.push(new TriangleBarrier(TABLE_WIDTH + TRIANGLE_SIZE,
       TABLE_HEIGHT / 2 + POCKET_SIZE - TRIANGLE_SIZE, TABLE_WIDTH, TABLE_HEIGHT / 2 + POCKET_SIZE));
+
+    // Top-left triangles.
+    this.barriers.push(new TriangleBarrier(CORNER_SPACE, 0, CORNER_SPACE - TRIANGLE_SIZE,
+      -TRIANGLE_SIZE));
+    this.barriers.push(new TriangleBarrier(-TRIANGLE_SIZE, CORNER_SPACE - TRIANGLE_SIZE,
+      0, CORNER_SPACE));
+
+    // Top-right triangles.
+    this.barriers.push(new TriangleBarrier(TABLE_WIDTH - CORNER_SPACE, 0,
+      TABLE_WIDTH - CORNER_SPACE + TRIANGLE_SIZE, -TRIANGLE_SIZE));
+    this.barriers.push(new TriangleBarrier(TABLE_WIDTH + TRIANGLE_SIZE,
+      CORNER_SPACE - TRIANGLE_SIZE, TABLE_WIDTH, CORNER_SPACE));
+
+    // Bottom-left triangles.
+    this.barriers.push(new TriangleBarrier(-TRIANGLE_SIZE,
+      TABLE_HEIGHT - CORNER_SPACE + TRIANGLE_SIZE, 0, TABLE_HEIGHT - CORNER_SPACE));
+    this.barriers.push(new TriangleBarrier(CORNER_SPACE, TABLE_HEIGHT, CORNER_SPACE - TRIANGLE_SIZE,
+      TABLE_HEIGHT + TRIANGLE_SIZE));
+
+    // Bottom-right triangles.
+    this.barriers.push(new TriangleBarrier(TABLE_WIDTH - CORNER_SPACE, TABLE_HEIGHT,
+      TABLE_WIDTH - CORNER_SPACE + TRIANGLE_SIZE, TABLE_HEIGHT + TRIANGLE_SIZE));
+    this.barriers.push(new TriangleBarrier(TABLE_WIDTH + TRIANGLE_SIZE,
+      TABLE_HEIGHT - CORNER_SPACE + TRIANGLE_SIZE, TABLE_WIDTH, TABLE_HEIGHT - CORNER_SPACE));
   }
 }
 const exported = {
