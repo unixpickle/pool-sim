@@ -9,6 +9,7 @@ const exported = {
   Barrier: Barrier,
   RectBarrier: RectBarrier,
   TriangleBarrier: TriangleBarrier,
+  Sink: Sink,
 
   TABLE_WIDTH: TABLE_WIDTH,
   TABLE_HEIGHT: TABLE_HEIGHT,

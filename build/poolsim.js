@@ -319,6 +319,25 @@ class TriangleBarrier extends Barrier {
     return false;
   }
 }
+
+class Sink {
+  constructor(x, y, radius) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius;
+  }
+
+  draw(ctx) {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  sink(ball) {
+    const dist = Math.sqrt(Math.pow(this.x - ball.x, 2) + Math.pow(this.y - ball.y, 2));
+    return dist < this.radius;
+  }
+}
 const TABLE_WIDTH = 0.5;
 const TABLE_HEIGHT = 1.0;
 const BALL_RADIUS = (21 / 8 / 88 / 2);
@@ -331,6 +350,10 @@ const TRIANGLE_SIZE = 0.02;
 const COLLISION_FORCE = 100;
 const MAX_TIMESTEP = 1 / 10000;
 const FRICTION = 0.01;
+const SIDE_SINK_SIZE = 0.04;
+const SIDE_SINK_OFFSET = 0.045;
+const CORNER_SINK_SIZE = 0.051;
+const CORNER_SINK_OFFSET = 0.02;
 
 // The raw game dynamics for pool. Does not include rules,
 // just hitting balls into pockets.
@@ -341,8 +364,10 @@ class Table extends ForceField {
     this.liveBalls = [this.whiteBall];
     this.sunkBalls = [];
     this.barriers = [];
+    this.sinks = [];
     this._createLiveBalls();
     this._createBarriers();
+    this._createSinks();
   }
 
   draw(ctx) {
@@ -350,6 +375,8 @@ class Table extends ForceField {
     ctx.fillRect(-WALL_WIDTH, -WALL_WIDTH, TABLE_WIDTH + WALL_WIDTH * 2, TABLE_HEIGHT + WALL_WIDTH * 2);
     ctx.fillStyle = 'green';
     ctx.fillRect(-GREEN_PAD, -GREEN_PAD, TABLE_WIDTH + GREEN_PAD * 2, TABLE_HEIGHT + GREEN_PAD * 2);
+    ctx.fillStyle = 'black';
+    this.sinks.forEach((b) => b.draw(ctx));
     this.liveBalls.forEach((b) => b.draw(ctx));
     ctx.fillStyle = 'brown';
     this.barriers.forEach((b) => b.draw(ctx));
@@ -401,7 +428,8 @@ class Table extends ForceField {
     for (let i = 0; i < this.liveBalls.length; ++i) {
       const ball = this.liveBalls[i];
       if (ball.x < -GREEN_PAD || ball.x >= TABLE_WIDTH + GREEN_PAD ||
-        ball.y < -GREEN_PAD || ball.y >= TABLE_HEIGHT + GREEN_PAD) {
+        ball.y < -GREEN_PAD || ball.y >= TABLE_HEIGHT + GREEN_PAD ||
+        this.sinks.some((s) => s.sink(ball))) {
         res.push(ball);
         this.sunkBalls.push(ball);
         this.liveBalls.splice(i, 1);
@@ -475,6 +503,21 @@ class Table extends ForceField {
     this.barriers.push(new TriangleBarrier(TABLE_WIDTH + TRIANGLE_SIZE,
       TABLE_HEIGHT - CORNER_SPACE + TRIANGLE_SIZE, TABLE_WIDTH, TABLE_HEIGHT - CORNER_SPACE));
   }
+
+  _createSinks() {
+    // Side sinks.
+    this.sinks.push(new Sink(-SIDE_SINK_OFFSET, TABLE_HEIGHT / 2, SIDE_SINK_SIZE));
+    this.sinks.push(new Sink(TABLE_WIDTH + SIDE_SINK_OFFSET, TABLE_HEIGHT / 2, SIDE_SINK_SIZE));
+
+    // Corner sinks.
+    this.sinks.push(new Sink(-CORNER_SINK_OFFSET, -CORNER_SINK_OFFSET, CORNER_SINK_SIZE));
+    this.sinks.push(new Sink(TABLE_WIDTH + CORNER_SINK_OFFSET, -CORNER_SINK_OFFSET,
+      CORNER_SINK_SIZE));
+    this.sinks.push(new Sink(TABLE_WIDTH + CORNER_SINK_OFFSET, TABLE_HEIGHT + CORNER_SINK_OFFSET,
+      CORNER_SINK_SIZE));
+    this.sinks.push(new Sink(-CORNER_SINK_OFFSET, TABLE_HEIGHT + CORNER_SINK_OFFSET,
+      CORNER_SINK_SIZE));
+  }
 }
 const exported = {
   Particle: Particle,
@@ -487,6 +530,7 @@ const exported = {
   Barrier: Barrier,
   RectBarrier: RectBarrier,
   TriangleBarrier: TriangleBarrier,
+  Sink: Sink,
 
   TABLE_WIDTH: TABLE_WIDTH,
   TABLE_HEIGHT: TABLE_HEIGHT,

@@ -181,3 +181,22 @@ class TriangleBarrier extends Barrier {
     return false;
   }
 }
+
+class Sink {
+  constructor(x, y, radius) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius;
+  }
+
+  draw(ctx) {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  sink(ball) {
+    const dist = Math.sqrt(Math.pow(this.x - ball.x, 2) + Math.pow(this.y - ball.y, 2));
+    return dist < this.radius;
+  }
+}

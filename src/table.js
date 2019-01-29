@@ -10,6 +10,10 @@ const TRIANGLE_SIZE = 0.02;
 const COLLISION_FORCE = 100;
 const MAX_TIMESTEP = 1 / 10000;
 const FRICTION = 0.01;
+const SIDE_SINK_SIZE = 0.04;
+const SIDE_SINK_OFFSET = 0.045;
+const CORNER_SINK_SIZE = 0.051;
+const CORNER_SINK_OFFSET = 0.02;
 
 // The raw game dynamics for pool. Does not include rules,
 // just hitting balls into pockets.
@@ -20,8 +24,10 @@ class Table extends ForceField {
     this.liveBalls = [this.whiteBall];
     this.sunkBalls = [];
     this.barriers = [];
+    this.sinks = [];
     this._createLiveBalls();
     this._createBarriers();
+    this._createSinks();
   }
 
   draw(ctx) {
@@ -29,6 +35,8 @@ class Table extends ForceField {
     ctx.fillRect(-WALL_WIDTH, -WALL_WIDTH, TABLE_WIDTH + WALL_WIDTH * 2, TABLE_HEIGHT + WALL_WIDTH * 2);
     ctx.fillStyle = 'green';
     ctx.fillRect(-GREEN_PAD, -GREEN_PAD, TABLE_WIDTH + GREEN_PAD * 2, TABLE_HEIGHT + GREEN_PAD * 2);
+    ctx.fillStyle = 'black';
+    this.sinks.forEach((b) => b.draw(ctx));
     this.liveBalls.forEach((b) => b.draw(ctx));
     ctx.fillStyle = 'brown';
     this.barriers.forEach((b) => b.draw(ctx));
@@ -80,7 +88,8 @@ class Table extends ForceField {
     for (let i = 0; i < this.liveBalls.length; ++i) {
       const ball = this.liveBalls[i];
       if (ball.x < -GREEN_PAD || ball.x >= TABLE_WIDTH + GREEN_PAD ||
-        ball.y < -GREEN_PAD || ball.y >= TABLE_HEIGHT + GREEN_PAD) {
+        ball.y < -GREEN_PAD || ball.y >= TABLE_HEIGHT + GREEN_PAD ||
+        this.sinks.some((s) => s.sink(ball))) {
         res.push(ball);
         this.sunkBalls.push(ball);
         this.liveBalls.splice(i, 1);
@@ -153,5 +162,20 @@ class Table extends ForceField {
       TABLE_WIDTH - CORNER_SPACE + TRIANGLE_SIZE, TABLE_HEIGHT + TRIANGLE_SIZE));
     this.barriers.push(new TriangleBarrier(TABLE_WIDTH + TRIANGLE_SIZE,
       TABLE_HEIGHT - CORNER_SPACE + TRIANGLE_SIZE, TABLE_WIDTH, TABLE_HEIGHT - CORNER_SPACE));
+  }
+
+  _createSinks() {
+    // Side sinks.
+    this.sinks.push(new Sink(-SIDE_SINK_OFFSET, TABLE_HEIGHT / 2, SIDE_SINK_SIZE));
+    this.sinks.push(new Sink(TABLE_WIDTH + SIDE_SINK_OFFSET, TABLE_HEIGHT / 2, SIDE_SINK_SIZE));
+
+    // Corner sinks.
+    this.sinks.push(new Sink(-CORNER_SINK_OFFSET, -CORNER_SINK_OFFSET, CORNER_SINK_SIZE));
+    this.sinks.push(new Sink(TABLE_WIDTH + CORNER_SINK_OFFSET, -CORNER_SINK_OFFSET,
+      CORNER_SINK_SIZE));
+    this.sinks.push(new Sink(TABLE_WIDTH + CORNER_SINK_OFFSET, TABLE_HEIGHT + CORNER_SINK_OFFSET,
+      CORNER_SINK_SIZE));
+    this.sinks.push(new Sink(-CORNER_SINK_OFFSET, TABLE_HEIGHT + CORNER_SINK_OFFSET,
+      CORNER_SINK_SIZE));
   }
 }
