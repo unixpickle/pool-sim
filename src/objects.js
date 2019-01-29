@@ -15,7 +15,6 @@ class Ball extends Particle {
     super(x, y);
     this.radius = radius;
     this.number = number;
-    console.log(this.number);
   }
 
   draw(ctx) {
@@ -46,7 +45,7 @@ class Ball extends Particle {
       return null;
     }
     const dist = Math.sqrt(Math.pow(this.x - ball.x, 2) + Math.pow(this.y - ball.y, 2));
-    if (dist > this.radius + ball.radius) {
+    if (dist >= this.radius + ball.radius) {
       return null;
     }
     const normalX = ball.x - this.x;
@@ -66,7 +65,7 @@ class Ball extends Particle {
 
     // Quadratic formula for ax^2 + bx + c.
     const a = vx * vx + vy * vy;
-    const b = 2 * ((vx * x1 + vy * y1) + (vx * this.x + vy * this.y));
+    const b = 2 * ((vx * x1 + vy * y1) - (vx * this.x + vy * this.y));
     const c = (this.x * this.x + this.y * this.y) + (x1 * x1 + y1 * y1) -
       (this.radius * this.radius) - 2 * (this.x * x1 + this.y * y1);
 
@@ -169,7 +168,7 @@ class TriangleBarrier extends Barrier {
       ball.containsPoint(this.x1, this.y1) ||
       ball.containsPoint(this.x2, this.y2) ||
       ball.containsPoint(this.x3(), this.y3()) ||
-      ball.hitsLine(this.x1, this.y1, this.x2, y2) ||
+      ball.hitsLine(this.x1, this.y1, this.x2, this.y2) ||
       ball.hitsLine(this.x2, this.y2, this.x3(), this.y3()) ||
       ball.hitsLine(this.x3(), this.y3(), this.x1, this.y1)) {
       return new Collision(this.normal.slice());

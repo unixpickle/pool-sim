@@ -153,7 +153,6 @@ class Ball extends Particle {
     super(x, y);
     this.radius = radius;
     this.number = number;
-    console.log(this.number);
   }
 
   draw(ctx) {
@@ -178,6 +177,45 @@ class Ball extends Particle {
       ctx.restore();
     }
   }
+
+  collision(ball) {
+    if (ball === this) {
+      return null;
+    }
+    const dist = Math.sqrt(Math.pow(this.x - ball.x, 2) + Math.pow(this.y - ball.y, 2));
+    if (dist >= this.radius + ball.radius) {
+      return null;
+    }
+    const normalX = ball.x - this.x;
+    const normalY = ball.y - this.y;
+    const invMag = 1 / Math.sqrt(Math.pow(normalX, 2) + Math.pow(normalY, 2));
+    return new Collision([invMag * normalX, invMag * normalY]);
+  }
+
+  containsPoint(x, y) {
+    const dist = Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2));
+    return dist <= this.radius;
+  }
+
+  hitsLine(x1, y1, x2, y2) {
+    const vx = x2 - x1;
+    const vy = y2 - y1;
+
+    // Quadratic formula for ax^2 + bx + c.
+    const a = vx * vx + vy * vy;
+    const b = 2 * ((vx * x1 + vy * y1) - (vx * this.x + vy * this.y));
+    const c = (this.x * this.x + this.y * this.y) + (x1 * x1 + y1 * y1) -
+      (this.radius * this.radius) - 2 * (this.x * x1 + this.y * y1);
+
+    const sqrtBody = (b * b - 4 * a * c);
+    if (sqrtBody < 0) {
+      return false;
+    }
+
+    const t1 = (-b + Math.sqrt(sqrtBody)) / (2 * a);
+    const t2 = (-b - Math.sqrt(sqrtBody)) / (2 * a);
+    return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
+  }
 }
 
 class Collision {
@@ -197,16 +235,36 @@ class Barrier {
 }
 
 class RectBarrier extends Barrier {
-  constructor(x, y, width, height) {
+  constructor(x, y, width, height, normal) {
     super();
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
+    this.normal = normal;
   }
 
   draw(ctx) {
     ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+
+  collision(ball) {
+    if (this.containsPoint(ball.x, ball.y) ||
+      ball.containsPoint(this.x, this.y) ||
+      ball.containsPoint(this.x + this.width, this.y) ||
+      ball.containsPoint(this.x, this.y + this.height) ||
+      ball.containsPoint(this.x + this.width, this.y + this.height) ||
+      ball.hitsLine(this.x, this.y, this.x + this.width, this.y) ||
+      ball.hitsLine(this.x, this.y, this.x, this.y + this.height) ||
+      ball.hitsLine(this.x + this.width, this.y, this.x + this.width, this.y + this.height) ||
+      ball.hitsLine(this.x, this.y + this.height, this.x + this.width, this.y + this.height)) {
+      return new Collision(this.normal.slice());
+    }
+    return null;
+  }
+
+  containsPoint(x, y) {
+    return (x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height);
   }
 }
 
@@ -217,6 +275,13 @@ class TriangleBarrier extends Barrier {
     this.y1 = y1;
     this.x2 = x2;
     this.y2 = y2;
+
+    const midX = (this.x1 + this.x2) / 2;
+    const midY = (this.y1 + this.y2) / 2;
+    const normalX = midX - this.x3();
+    const normalY = midY - this.y3();
+    const invMag = 1 / Math.sqrt(Math.pow(normalX, 2) + Math.pow(normalY, 2));
+    this.normal = [invMag * normalX, invMag * normalY];
   }
 
   x3() {
@@ -235,20 +300,42 @@ class TriangleBarrier extends Barrier {
     ctx.closePath();
     ctx.fill();
   }
+
+  collision(ball) {
+    if (this.containsPoint(ball.x, ball.y) ||
+      ball.containsPoint(this.x1, this.y1) ||
+      ball.containsPoint(this.x2, this.y2) ||
+      ball.containsPoint(this.x3(), this.y3()) ||
+      ball.hitsLine(this.x1, this.y1, this.x2, this.y2) ||
+      ball.hitsLine(this.x2, this.y2, this.x3(), this.y3()) ||
+      ball.hitsLine(this.x3(), this.y3(), this.x1, this.y1)) {
+      return new Collision(this.normal.slice());
+    }
+    return null;
+  }
+
+  containsPoint(x, y) {
+    // TODO: this.
+    return false;
+  }
 }
 const TABLE_WIDTH = 0.5;
 const TABLE_HEIGHT = 1.0;
 const BALL_RADIUS = (21 / 8 / 88 / 2);
+const BALL_SPACE = 0.001;
 const CORNER_SPACE = 0.05;
 const POCKET_SIZE = 0.05;
 const GREEN_PAD = 0.02;
-const WALL_WIDTH = 0.15;
+const WALL_WIDTH = 0.12;
 const TRIANGLE_SIZE = 0.02;
+const COLLISION_FORCE = 100;
+const MAX_TIMESTEP = 1 / 10000;
 
 // The raw game dynamics for pool. Does not include rules,
 // just hitting balls into pockets.
-class Table {
+class Table extends ForceField {
   constructor() {
+    super();
     this.whiteBall = new Ball(TABLE_WIDTH / 2, TABLE_HEIGHT * 0.8, BALL_RADIUS, 0);
     this.liveBalls = [this.whiteBall];
     this.sunkBalls = [];
@@ -267,14 +354,58 @@ class Table {
     this.barriers.forEach((b) => b.draw(ctx));
   }
 
+  step(time) {
+    const sunkBalls = [];
+    const numSteps = Math.ceil(time / MAX_TIMESTEP);
+    const stepSize = time / numSteps;
+    for (let i = 0; i < numSteps; ++i) {
+      rk4Step(this.liveBalls, this, stepSize);
+      sunkBalls.push.apply(sunkBalls, this.sinkBalls());
+    }
+    return sunkBalls;
+  }
+
+  forces(particles) {
+    const objects = this.liveBalls.slice();
+    objects.push.apply(objects, this.barriers);
+    return particles.map((p) => {
+      let forceX = 0;
+      let forceY = 0;
+      objects.forEach((obj) => {
+        const collision = obj.collision(p);
+        if (collision !== null) {
+          forceX += COLLISION_FORCE * collision.normal[0];
+          forceY += COLLISION_FORCE * collision.normal[1];
+        }
+      });
+      return [forceX, forceY];
+    });
+  }
+
+  sinkBalls() {
+    const res = [];
+    for (let i = 0; i < this.liveBalls.length; ++i) {
+      const ball = this.liveBalls[i];
+      if (ball.x < -GREEN_PAD || ball.x >= TABLE_WIDTH + GREEN_PAD ||
+        ball.y < -GREEN_PAD || ball.y >= TABLE_HEIGHT + GREEN_PAD) {
+        res.push(ball);
+        this.sunkBalls.push(ball);
+        this.liveBalls.splice(i, 1);
+        --i;
+      }
+    }
+    return res;
+  }
+
   _createLiveBalls() {
     let ballNumber = 15;
     for (let row = 0; row < 5; ++row) {
       const count = 5 - row;
       const rowY = TABLE_HEIGHT * 0.2 + BALL_RADIUS * 2 * row;
-      const rowX = TABLE_WIDTH / 2 - BALL_RADIUS * count;
+      const rowX = TABLE_WIDTH / 2 - (2 * BALL_RADIUS + BALL_SPACE) * (count - 1) / 2;
       for (let i = 0; i < count; ++i) {
-        const ball = new Ball(rowX + i * BALL_RADIUS * 2, rowY, BALL_RADIUS, ballNumber--);
+        const ball = new Ball(rowX + i * (BALL_RADIUS * 2 + BALL_SPACE), rowY,
+          BALL_RADIUS, ballNumber--);
         this.liveBalls.push(ball);
       }
     }
@@ -282,13 +413,16 @@ class Table {
 
   _createBarriers() {
     const cs2 = CORNER_SPACE * 2;
-    this.barriers.push(new RectBarrier(CORNER_SPACE, -WALL_WIDTH, TABLE_WIDTH - cs2, WALL_WIDTH));
-    this.barriers.push(new RectBarrier(CORNER_SPACE, TABLE_HEIGHT, TABLE_WIDTH - cs2, WALL_WIDTH));
+    this.barriers.push(new RectBarrier(CORNER_SPACE, -WALL_WIDTH, TABLE_WIDTH - cs2, WALL_WIDTH,
+      [0, 1]));
+    this.barriers.push(new RectBarrier(CORNER_SPACE, TABLE_HEIGHT, TABLE_WIDTH - cs2, WALL_WIDTH,
+      [0, -1]));
     [-WALL_WIDTH, TABLE_WIDTH].forEach((x) => {
+      const normal = (x < 0 ? [1, 0] : [-1, 0]);
       this.barriers.push(new RectBarrier(x, CORNER_SPACE, WALL_WIDTH,
-        TABLE_HEIGHT / 2 - CORNER_SPACE - POCKET_SIZE));
+        TABLE_HEIGHT / 2 - CORNER_SPACE - POCKET_SIZE, normal));
       this.barriers.push(new RectBarrier(x, TABLE_HEIGHT / 2 + POCKET_SIZE, WALL_WIDTH,
-        TABLE_HEIGHT / 2 - CORNER_SPACE - POCKET_SIZE));
+        TABLE_HEIGHT / 2 - CORNER_SPACE - POCKET_SIZE, normal));
     });
 
     // Left triangles.

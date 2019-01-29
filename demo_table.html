@@ -10,13 +10,24 @@
   
     <script>
     const table = new poolsim.Table();
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.save();
-    ctx.translate(100, 100);
-    ctx.scale(400, 400);
-    table.draw(ctx);
-    ctx.restore();
+
+    function drawTable() {
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(100, 100);
+      ctx.scale(400, 400);
+      table.draw(ctx);
+      ctx.restore();
+    }
+
+    table.whiteBall.vy = -0.4;
+    table.whiteBall.vx = 0.02;
+    setInterval(() => {
+      table.step(1 / 24);
+      drawTable();
+    }, 1000 / 24);
     </script>
   </body>
 </html>
