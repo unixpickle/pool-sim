@@ -15,6 +15,25 @@ const SIDE_SINK_OFFSET = 0.045;
 const CORNER_SINK_SIZE = 0.051;
 const CORNER_SINK_OFFSET = 0.02;
 
+class SinkResult {
+  constructor(ball) {
+    this.ball = ball;
+  }
+
+  pocket() {
+    const column = this.ball.x < TABLE_WIDTH / 2 ? 0 : 1;
+    const row = this.ball.y < TABLE_HEIGHT / 3 ? 0 : (this.ball.y > TABLE_HEIGHT * 2 / 3 ? 2 : 1);
+    return row * 2 + column;
+  }
+}
+
+class StepResult {
+  constructor(sunk, hits) {
+    this.sunk = sunk;
+    this.hits = hits;
+  }
+}
+
 // The raw game dynamics for pool. Does not include rules,
 // just hitting balls into pockets.
 class Table extends ForceField {
@@ -25,6 +44,7 @@ class Table extends ForceField {
     this.sunkBalls = [];
     this.barriers = [];
     this.sinks = [];
+    this._whiteHits = [];
     this._createLiveBalls();
     this._createBarriers();
     this._createSinks();
@@ -43,14 +63,21 @@ class Table extends ForceField {
   }
 
   step(time) {
+    const hitWhite = [];
     const sunkBalls = [];
     const numSteps = Math.ceil(time / MAX_TIMESTEP);
     const stepSize = time / numSteps;
     for (let i = 0; i < numSteps; ++i) {
+      this._whiteHits = [];
       rk4Step(this.liveBalls, this, stepSize);
+      this._whiteHits.forEach((ball) => {
+        if (hitWhite.indexOf(ball) < 0) {
+          hitWhite.push(ball);
+        }
+      });
       sunkBalls.push.apply(sunkBalls, this.sinkBalls());
     }
-    return sunkBalls;
+    return new StepResult(sunkBalls, hitWhite);
   }
 
   halted() {
@@ -68,6 +95,9 @@ class Table extends ForceField {
         if (collision !== null) {
           forceX += COLLISION_FORCE * collision.normal[0];
           forceY += COLLISION_FORCE * collision.normal[1];
+          if (obj === this.whiteBall) {
+            this._whiteHits.push(p);
+          }
         }
       });
       let dampX = -p.vx;
@@ -90,7 +120,7 @@ class Table extends ForceField {
       if (ball.x < -GREEN_PAD || ball.x >= TABLE_WIDTH + GREEN_PAD ||
         ball.y < -GREEN_PAD || ball.y >= TABLE_HEIGHT + GREEN_PAD ||
         this.sinks.some((s) => s.sink(ball))) {
-        res.push(ball);
+        res.push(new SinkResult(ball));
         this.sunkBalls.push(ball);
         this.liveBalls.splice(i, 1);
         --i;

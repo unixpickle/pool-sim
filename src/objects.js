@@ -10,11 +10,22 @@ const BALL_COLORS = [
   '#232323',
 ];
 
+const BALL_SOLID = 0;
+const BALL_STRIPE = 1;
+
 class Ball extends Particle {
   constructor(x, y, radius, number) {
     super(x, y);
     this.radius = radius;
     this.number = number;
+  }
+
+  ballType() {
+    if (this.number <= 8) {
+      return BALL_SOLID;
+    } else {
+      return BALL_STRIPE;
+    }
   }
 
   draw(ctx) {
