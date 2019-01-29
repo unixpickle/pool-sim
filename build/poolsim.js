@@ -587,6 +587,19 @@ class ShootAction extends Action {
   }
 }
 
+class ShootScratchAction extends ShootAction {
+  constructor(angle, power) {
+    super(angle, power);
+    if (Math.sin(angle) > 0) {
+      throw new Error('bad angle');
+    }
+  }
+
+  static sample() {
+    return new ShootScratchAction(-Math.random() * Math.PI, Math.random());
+  }
+}
+
 class PlaceAction extends Action {
   constructor(x, y) {
     super();
@@ -600,7 +613,7 @@ class PlaceAction extends Action {
 
   static sample() {
     const minX = 0.1;
-    const maxX = 0.9;
+    const maxX = TABLE_WIDTH - 0.1;
     const minY = 0.8;
     const maxY = 0.95;
     return new PlaceAction(Math.random() * (maxX - minX) + minX,
@@ -640,6 +653,7 @@ class Game {
 
     // If we are up to the eight ball.
     this._guessedPocket = null;
+    this._shootScratch = true;
   }
 
   winner() {
@@ -657,6 +671,8 @@ class Game {
       return PlaceAction;
     } else if (this.upToLast() && this._guessedPocket === null) {
       return PickPocketAction;
+    } else if (this._shootScratch) {
+      return ShootScratchAction;
     } else {
       return ShootAction;
     }
@@ -668,8 +684,9 @@ class Game {
     }
     if (action instanceof ShootAction) {
       this.table.whiteBall.vx = Math.cos(action.angle) * action.power;
-      this.table.whiteBall.vy = Math.cos(action.angle) * action.power;
+      this.table.whiteBall.vy = Math.sin(action.angle) * action.power;
     } else if (action instanceof PlaceAction) {
+      this._shootScratch = true;
       this.table.whiteBall.x = action.x;
       this.table.whiteBall.y = action.y;
       this.table.sunkBalls.splice(this.table.sunkBalls.indexOf(this.table.whiteBall), 1);
@@ -714,6 +731,8 @@ class Game {
         this._keepTurn = true;
       } else if (this.correctType(sunk.ball)) {
         this._keepTurn = true;
+        // Don't scratch even if we didn't hit our own ball.
+        this._hitOwn = true;
       } else {
         this._keepTurn = false;
       }
@@ -736,6 +755,7 @@ class Game {
     if (!this._hitOwn) {
       this.sinkWhite();
     }
+    this._shootScratch = false;
     this._guessedPocket = null;
     this._keepTurn = false;
     this._hitOwn = false;
