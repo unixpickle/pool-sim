@@ -4,6 +4,8 @@ const exported = {
   eulerStep: eulerStep,
   rk4Step: rk4Step,
 
+  BALL_SOLID: BALL_SOLID,
+  BALL_STRIPE: BALL_STRIPE,
   Ball: Ball,
   Collision: Collision,
   Barrier: Barrier,

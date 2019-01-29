@@ -7,6 +7,10 @@
   </head>
   <body>
     <canvas id="canvas" width="600" height="600">Upgrade your browser.</canvas>
+    <br>
+    Player: <label id="player"></label>
+    <br>
+    Ball type: <label id="ball-type"></label>
 
     <script>
     const game = new poolsim.Game();
@@ -22,19 +26,34 @@
       ctx.restore();
     }
 
+    function updateStats() {
+      document.getElementById('player').textContent = game.turn();
+      const type = game.playerType();
+      const typeStr = (type === null ? 'any' : (type === poolsim.BALL_SOLID ? 'solid' : 'stripe'));
+      document.getElementById('ball-type').textContent = typeStr;
+    }
+
     let interval;
+    let turnPause = 0;
     interval = setInterval(() => {
+      if (--turnPause > 0) {
+        return;
+      }
       if (game.winner() !== null) {
         alert('winner is ' + game.winner());
         clearInterval(interval);
         return;
       }
       if (game.actionType() === null) {
-        game.step(1 / 24);
+        if (game.step(1 / 24)) {
+          turnPause = 24;
+          return;
+        }
       } else {
         game.act(game.actionType().sample());
       }
       drawTable();
+      updateStats();
     }, 1000 / 24);
     </script>
   </body>
