@@ -330,6 +330,7 @@ const WALL_WIDTH = 0.12;
 const TRIANGLE_SIZE = 0.02;
 const COLLISION_FORCE = 100;
 const MAX_TIMESTEP = 1 / 10000;
+const FRICTION = 0.01;
 
 // The raw game dynamics for pool. Does not include rules,
 // just hitting balls into pockets.
@@ -365,6 +366,10 @@ class Table extends ForceField {
     return sunkBalls;
   }
 
+  halted() {
+    return !this.liveBalls.some((ball) => ball.energy() > 1e-6);
+  }
+
   forces(particles) {
     const objects = this.liveBalls.slice();
     objects.push.apply(objects, this.barriers);
@@ -378,7 +383,16 @@ class Table extends ForceField {
           forceY += COLLISION_FORCE * collision.normal[1];
         }
       });
-      return [forceX, forceY];
+      let dampX = -p.vx;
+      let dampY = -p.vy;
+      const mag = Math.sqrt(Math.pow(dampX, 2) + Math.pow(dampY, 2));
+      if (mag > 1e-8) {
+        dampX /= mag;
+        dampY /= mag;
+        dampX *= FRICTION;
+        dampY *= FRICTION;
+      }
+      return [forceX + dampX, forceY + dampY];
     });
   }
 
