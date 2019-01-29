@@ -15,6 +15,12 @@ const exported = {
   TABLE_HEIGHT: TABLE_HEIGHT,
   BALL_RADIUS: BALL_RADIUS,
   Table: Table,
+
+  Action: Action,
+  ShootAction: ShootAction,
+  PlaceAction: PlaceAction,
+  PickPocketAction: PickPocketAction,
+  Game: Game,
 };
 
 if ('undefined' !== typeof window) {

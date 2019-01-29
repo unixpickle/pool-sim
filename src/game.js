@@ -11,6 +11,7 @@ class Action {
 
 class ShootAction extends Action {
   constructor(angle, power) {
+    super();
     this.angle = angle;
     this.power = power;
   }
@@ -26,6 +27,7 @@ class ShootAction extends Action {
 
 class PlaceAction extends Action {
   constructor(x, y) {
+    super();
     this.x = x;
     this.y = y;
   }
@@ -46,6 +48,7 @@ class PlaceAction extends Action {
 
 class PickPocketAction extends Action {
   constructor(index) {
+    super();
     this.index = index;
   }
 
@@ -147,7 +150,7 @@ class Game {
           this._firstPlayerType = 1 - sunk.ball.ballType();
         }
         this._keepTurn = true;
-      } else if (this.correctType(ball)) {
+      } else if (this.correctType(sunk.ball)) {
         this._keepTurn = true;
       } else {
         this._keepTurn = false;
@@ -192,14 +195,14 @@ class Game {
   }
 
   upToLast() {
-    return !this.liveBalls.some((b) => this.correctType(b));
+    return !this.table.liveBalls.some((b) => this.correctType(b));
   }
 
   correctType(ball) {
     if (ball.number === 8) {
-      return this.upToLast();
+      return false;
     }
-    return (sunk.ball.ballType() === this._firstPlayerType) === (this._turn === 0);
+    return (ball.ballType() === this._firstPlayerType) === (this._turn === 0);
   }
 
   playerType() {
