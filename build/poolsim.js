@@ -260,6 +260,17 @@ class RectBarrier extends Barrier {
   }
 
   collision(ball) {
+    // Heuristic to prune out most checks.
+    if (ball.x - ball.radius > this.x + this.width) {
+      return null;
+    } else if (ball.y - ball.radius > this.y + this.height) {
+      return null;
+    } else if (ball.x + ball.radius < this.x) {
+      return null;
+    } else if (ball.y + ball.radius < this.y) {
+      return null;
+    }
+
     if (this.containsPoint(ball.x, ball.y) ||
       ball.containsPoint(this.x, this.y) ||
       ball.containsPoint(this.x + this.width, this.y) ||
@@ -293,6 +304,9 @@ class TriangleBarrier extends Barrier {
     const normalY = midY - this.y3();
     const invMag = 1 / Math.sqrt(Math.pow(normalX, 2) + Math.pow(normalY, 2));
     this.normal = [invMag * normalX, invMag * normalY];
+
+    this.midpoint = { x: midX, y: midY };
+    this.radius = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
   }
 
   x3() {
@@ -313,6 +327,11 @@ class TriangleBarrier extends Barrier {
   }
 
   collision(ball) {
+    // Heuristic to prune out most checks.
+    if (ball.distance(this.midpoint) > this.radius + ball.radius) {
+      return null;
+    }
+
     if (this.containsPoint(ball.x, ball.y) ||
       ball.containsPoint(this.x1, this.y1) ||
       ball.containsPoint(this.x2, this.y2) ||
