@@ -10,6 +10,7 @@
       <option value="RandomAgent">RandomAgent</option>
       <option value="FastRandomAgent">FastRandomAgent</option>
       <option value="AimClosestAgent">AimClosestAgent</option>
+      <option value="SearchAgent">SearchAgent</option>
     </select>
     <br>
     <button onclick="startGame()">Start Game</button>
@@ -49,7 +50,9 @@
             return;
           }
         } else {
-          game.act(agent.pickAction(game));
+          const act = agent.pickAction(game);
+          console.log(act.toString());
+          game.act(act);
         }
         drawTable(game);
         updateStats(game);
