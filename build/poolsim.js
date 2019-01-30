@@ -743,10 +743,12 @@ class Game {
       this._shootScratch = true;
       this.table.whiteBall.x = action.x;
       this.table.whiteBall.y = action.y;
+      this.table.whiteBall.vx = 0;
+      this.table.whiteBall.vy = 0;
       this.table.sunkBalls.splice(this.table.sunkBalls.indexOf(this.table.whiteBall), 1);
       this.table.liveBalls.push(this.table.whiteBall);
     } else if (action instanceof PickPocketAction) {
-      this._guessedPocket = action.pocket;
+      this._guessedPocket = action.index;
     }
   }
 
@@ -809,11 +811,12 @@ class Game {
   }
 
   upToLast() {
-    return !this.table.liveBalls.some((b) => this.correctType(b));
+    return !this.table.liveBalls.some((b) => this.correctType(b)) &&
+      this.table.sunkBalls.length > 1;
   }
 
   correctType(ball) {
-    if (ball.number === 8) {
+    if (ball.number === 8 || ball.number === 0) {
       return false;
     }
     return (ball.ballType() === this._firstPlayerType) === (this._turn === 0);
