@@ -91,7 +91,11 @@ class Game {
 
     // If we are up to the eight ball.
     this._guessedPocket = null;
-    this._shootScratch = true;
+
+    // Indicate that the ball must be shot forward.
+    this._shootScratch = false;
+
+    this.sinkWhite();
   }
 
   winner() {
