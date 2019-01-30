@@ -655,7 +655,7 @@ class PlaceAction extends Action {
     while (true) {
       const x = Math.random() * (maxX - minX) + minX;
       const y = Math.random() * (maxY - minY) + minY;
-      if (!game.table.liveBalls.some((b) => b.distance({ x: x, y: y }) <= BALL_RADIUS)) {
+      if (!game.table.liveBalls.some((b) => b.distance({ x: x, y: y }) <= BALL_RADIUS * 2)) {
         return new PlaceAction(x, y);
       }
     }
