@@ -23,6 +23,9 @@ const exported = {
   PlaceAction: PlaceAction,
   PickPocketAction: PickPocketAction,
   Game: Game,
+
+  RandomAgent: RandomAgent,
+  FastRandomAgent: FastRandomAgent,
 };
 
 if ('undefined' !== typeof window) {

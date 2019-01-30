@@ -801,7 +801,28 @@ class Game {
       return 1 - this._firstPlayerType;
     }
   }
-}const exported = {
+}class Agent {
+  pickAction(game) {
+    throw new Error('not implemented');
+  }
+}
+
+class RandomAgent {
+  pickAction(game) {
+    return game.actionType().sample();
+  }
+}
+
+class FastRandomAgent {
+  pickAction(game) {
+    const action = game.actionType().sample();
+    if (action instanceof ShootAction) {
+      action.power = 1;
+    }
+    return action;
+  }
+}
+const exported = {
   Particle: Particle,
   ForceField: ForceField,
   eulerStep: eulerStep,
@@ -826,6 +847,9 @@ class Game {
   PlaceAction: PlaceAction,
   PickPocketAction: PickPocketAction,
   Game: Game,
+
+  RandomAgent: RandomAgent,
+  FastRandomAgent: FastRandomAgent,
 };
 
 if ('undefined' !== typeof window) {

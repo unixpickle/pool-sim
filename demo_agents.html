@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Pool Table</title>
+    <script src="build/poolsim.js"></script>
+  </head>
+  <body>
+    Agent: <select id="agent">
+      <option value="RandomAgent">RandomAgent</option>
+      <option value="FastRandomAgent">FastRandomAgent</option>
+    </select>
+    <br>
+    <button onclick="startGame()">Start Game</button>
+    <br>
+    <canvas id="canvas" width="402" height="600">Upgrade your browser.</canvas>
+    <br>
+    Player: <label id="player"></label>
+    <br>
+    Ball type: <label id="ball-type"></label>
+    <br>
+    <label id="winner-label"></label>
+
+    <script>
+    let interval = null;
+
+    function startGame() {
+      if (interval !== null) {
+        clearInterval(interval);
+      }
+      document.getElementById('winner-label').textContent = '';
+
+      const game = new poolsim.Game();
+      const ctor = poolsim[document.getElementById('agent').value];
+      const agent = new ctor();
+      let turnPause = 0;
+      interval = setInterval(() => {
+        if (--turnPause > 0) {
+          return;
+        }
+        if (game.winner() !== null) {
+          gameOver(game);
+          return;
+        }
+        if (game.actionType() === null) {
+          if (game.step(1 / 24)) {
+            turnPause = 24;
+            return;
+          }
+        } else {
+          game.act(agent.pickAction(game));
+        }
+        drawTable(game);
+        updateStats(game);
+      }, 1000 / 24);
+    }
+
+    function gameOver(game) {
+      document.getElementById('winner-label').textContent = 'Winner: ' + game.winner();
+      clearInterval(interval);
+      interval = null;
+    }
+
+    function drawTable(game) {
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(100, 100);
+      ctx.scale(400, 400);
+      game.table.draw(ctx);
+      ctx.restore();
+    }
+
+    function updateStats(game) {
+      document.getElementById('player').textContent = game.turn();
+      const type = game.playerType();
+      const typeStr = (type === null ? 'any' : (type === poolsim.BALL_SOLID ? 'solid' : 'stripe'));
+      document.getElementById('ball-type').textContent = typeStr;
+    }
+    </script>
+  </body>
+</html>
