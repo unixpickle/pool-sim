@@ -50,6 +50,24 @@ class Table extends ForceField {
     this._createSinks();
   }
 
+  clone() {
+    const res = new Table();
+    const newBalls = res.liveBalls.concat(res.sunkBalls);
+    const ourBalls = this.liveBalls.concat(this.sunkBalls);
+    newBalls.sort((x, y) => x.number - y.number);
+    ourBalls.sort((x, y) => x.number - y.number);
+    ourBalls.forEach((ourBall, i) => {
+      const newBall = newBalls[i];
+      newBall.x = ourBall.x;
+      newBall.y = ourBall.y;
+      newBall.vx = ourBall.vx;
+      newBall.vy = ourBall.vy;
+    });
+    res.liveBalls = this.liveBalls.map((b) => newBalls[b.number]);
+    res.sunkBalls = this.sunkBalls.map((b) => newBalls[b.number]);
+    return res;
+  }
+
   draw(ctx) {
     ctx.fillStyle = 'black';
     ctx.fillRect(-WALL_WIDTH, -WALL_WIDTH, TABLE_WIDTH + WALL_WIDTH * 2, TABLE_HEIGHT + WALL_WIDTH * 2);
@@ -85,8 +103,7 @@ class Table extends ForceField {
   }
 
   forces(particles) {
-    const objects = this.liveBalls.slice();
-    objects.push.apply(objects, this.barriers);
+    const objects = this.liveBalls.concat(this.barriers);
     return particles.map((p) => {
       let forceX = 0;
       let forceY = 0;

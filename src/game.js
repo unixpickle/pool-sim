@@ -100,7 +100,16 @@ class Game {
     // Indicate that the ball must be shot forward.
     this._shootScratch = false;
 
-    this.sinkWhite();
+    this._sinkWhite();
+  }
+
+  clone() {
+    const res = new Game();
+    res.table = this.table.clone();
+    const fields = ['_winner', '_turn', '_firstPlayerType', '_keepTurn', '_hitOwn',
+      '_guessedPocket', '_shootScratch'];
+    fields.forEach((k) => res[k] = this[k]);
+    return res;
   }
 
   winner() {
@@ -185,27 +194,16 @@ class Game {
       }
     });
     if (this.table.halted()) {
-      this.finishTurn();
+      this._finishTurn();
       return true;
     } else {
       return false;
     }
   }
 
-  finishTurn() {
-    if (this._winner === null && this.sunkBlack()) {
-      this._winner = this._turn;
+  stepFully() {
+    while (!this.step(1 / 24)) {
     }
-    if (!this._keepTurn || this.sunkWhite()) {
-      this._turn = 1 - this._turn;
-    }
-    if (!this._hitOwn) {
-      this.sinkWhite();
-    }
-    this._shootScratch = false;
-    this._guessedPocket = null;
-    this._keepTurn = false;
-    this._hitOwn = false;
   }
 
   sunkBlack() {
@@ -214,13 +212,6 @@ class Game {
 
   sunkWhite() {
     return this.table.sunkBalls.some((b) => b.number === 0);
-  }
-
-  sinkWhite() {
-    if (!this.sunkWhite()) {
-      this.table.liveBalls.splice(this.table.liveBalls.indexOf(this.table.whiteBall), 1);
-      this.table.sunkBalls.push(this.table.whiteBall);
-    }
   }
 
   upToLast() {
@@ -243,5 +234,28 @@ class Game {
     } else {
       return 1 - this._firstPlayerType;
     }
+  }
+
+  _sinkWhite() {
+    if (!this.sunkWhite()) {
+      this.table.liveBalls.splice(this.table.liveBalls.indexOf(this.table.whiteBall), 1);
+      this.table.sunkBalls.push(this.table.whiteBall);
+    }
+  }
+
+  _finishTurn() {
+    if (this._winner === null && this.sunkBlack()) {
+      this._winner = this._turn;
+    }
+    if (!this._keepTurn || this.sunkWhite()) {
+      this._turn = 1 - this._turn;
+    }
+    if (!this._hitOwn) {
+      this._sinkWhite();
+    }
+    this._shootScratch = false;
+    this._guessedPocket = null;
+    this._keepTurn = false;
+    this._hitOwn = false;
   }
 }
