@@ -401,6 +401,24 @@ class Table extends ForceField {
     this._createSinks();
   }
 
+  clone() {
+    const res = new Table();
+    const newBalls = res.liveBalls.concat(res.sunkBalls);
+    const ourBalls = this.liveBalls.concat(this.sunkBalls);
+    newBalls.sort((x, y) => x.number - y.number);
+    ourBalls.sort((x, y) => x.number - y.number);
+    ourBalls.forEach((ourBall, i) => {
+      const newBall = newBalls[i];
+      newBall.x = ourBall.x;
+      newBall.y = ourBall.y;
+      newBall.vx = ourBall.vx;
+      newBall.vy = ourBall.vy;
+    });
+    res.liveBalls = this.liveBalls.map((b) => newBalls[b.number]);
+    res.sunkBalls = this.sunkBalls.map((b) => newBalls[b.number]);
+    return res;
+  }
+
   draw(ctx) {
     ctx.fillStyle = 'black';
     ctx.fillRect(-WALL_WIDTH, -WALL_WIDTH, TABLE_WIDTH + WALL_WIDTH * 2, TABLE_HEIGHT + WALL_WIDTH * 2);
@@ -436,8 +454,7 @@ class Table extends ForceField {
   }
 
   forces(particles) {
-    const objects = this.liveBalls.slice();
-    objects.push.apply(objects, this.barriers);
+    const objects = this.liveBalls.concat(this.barriers);
     return particles.map((p) => {
       let forceX = 0;
       let forceY = 0;
@@ -662,7 +679,16 @@ class Game {
     // Indicate that the ball must be shot forward.
     this._shootScratch = false;
 
-    this.sinkWhite();
+    this._sinkWhite();
+  }
+
+  clone() {
+    const res = new Game();
+    res.table = this.table.clone();
+    const fields = ['_winner', '_turn', '_firstPlayerType', '_keepTurn', '_hitOwn',
+      '_guessedPocket', '_shootScratch'];
+    fields.forEach((k) => res[k] = this[k]);
+    return res;
   }
 
   winner() {
@@ -709,11 +735,7 @@ class Game {
     const result = this.table.step(seconds);
 
     result.hits.forEach((ball) => {
-      if (this._firstPlayerType === null) {
-        this._hitOwn = true;
-      } else if (this.correctType(ball)) {
-        this._hitOwn = true;
-      } else if (ball.number === 8 && this.upToLast()) {
+      if (this.wantsToHit(ball)) {
         this._hitOwn = true;
       }
     });
@@ -747,27 +769,16 @@ class Game {
       }
     });
     if (this.table.halted()) {
-      this.finishTurn();
+      this._finishTurn();
       return true;
     } else {
       return false;
     }
   }
 
-  finishTurn() {
-    if (this._winner === null && this.sunkBlack()) {
-      this._winner = this._turn;
+  stepFully() {
+    while (!this.step(1 / 24)) {
     }
-    if (!this._keepTurn || this.sunkWhite()) {
-      this._turn = 1 - this._turn;
-    }
-    if (!this._hitOwn) {
-      this.sinkWhite();
-    }
-    this._shootScratch = false;
-    this._guessedPocket = null;
-    this._keepTurn = false;
-    this._hitOwn = false;
   }
 
   sunkBlack() {
@@ -776,13 +787,6 @@ class Game {
 
   sunkWhite() {
     return this.table.sunkBalls.some((b) => b.number === 0);
-  }
-
-  sinkWhite() {
-    if (!this.sunkWhite()) {
-      this.table.liveBalls.splice(this.table.liveBalls.indexOf(this.table.whiteBall), 1);
-      this.table.sunkBalls.push(this.table.whiteBall);
-    }
   }
 
   upToLast() {
@@ -806,25 +810,87 @@ class Game {
       return 1 - this._firstPlayerType;
     }
   }
+
+  wantsToHit(ball) {
+    return this._firstPlayerType === null || this.correctType(ball) ||
+      (ball.number === 8 && this.upToLast());
+  }
+
+  _sinkWhite() {
+    if (!this.sunkWhite()) {
+      this.table.liveBalls.splice(this.table.liveBalls.indexOf(this.table.whiteBall), 1);
+      this.table.sunkBalls.push(this.table.whiteBall);
+    }
+  }
+
+  _finishTurn() {
+    if (this._winner === null && this.sunkBlack()) {
+      this._winner = this._turn;
+    }
+    if (!this._keepTurn || this.sunkWhite()) {
+      this._turn = 1 - this._turn;
+    }
+    if (!this._hitOwn) {
+      this._sinkWhite();
+    }
+    this._shootScratch = false;
+    this._guessedPocket = null;
+    this._keepTurn = false;
+    this._hitOwn = false;
+  }
 }class Agent {
   pickAction(game) {
     throw new Error('not implemented');
   }
 }
 
-class RandomAgent {
+class RandomAgent extends Agent {
   pickAction(game) {
     return game.actionType().sample(game);
   }
 }
 
-class FastRandomAgent {
+class FastRandomAgent extends Agent {
   pickAction(game) {
     const action = game.actionType().sample(game);
     if (action instanceof ShootAction) {
       action.power = 1;
     }
     return action;
+  }
+}
+
+class AimClosestAgent extends FastRandomAgent {
+  pickAction(game) {
+    const action = super.pickAction(game);
+    let closestBall = null;
+    if (action instanceof ShootScratchAction) {
+      closestBall = this.closestBall(game, true);
+    } else if (action instanceof ShootAction) {
+      closestBall = this.closestBall(game, false);
+    }
+    if (closestBall === null) {
+      return action;
+    }
+    action.angle = Math.atan2(closestBall.y - game.table.whiteBall.y,
+      closestBall.x - game.table.whiteBall.x);
+    return action;
+  }
+
+  closestBall(game, scratch) {
+    let closestDist = Infinity;
+    let closestBall = null;
+    game.table.liveBalls.forEach((b) => {
+      if (b.number === 0 || (scratch && b.y > game.table.whiteBall.y) || !game.wantsToHit(b)) {
+        return;
+      }
+      const distance = b.distance(game.table.whiteBall);
+      if (distance < closestDist) {
+        closestDist = distance;
+        closestBall = b;
+      }
+    });
+    return closestBall;
   }
 }
 const exported = {
@@ -855,6 +921,7 @@ const exported = {
 
   RandomAgent: RandomAgent,
   FastRandomAgent: FastRandomAgent,
+  AimClosestAgent: AimClosestAgent,
 };
 
 if ('undefined' !== typeof window) {

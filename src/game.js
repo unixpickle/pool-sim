@@ -156,11 +156,7 @@ class Game {
     const result = this.table.step(seconds);
 
     result.hits.forEach((ball) => {
-      if (this._firstPlayerType === null) {
-        this._hitOwn = true;
-      } else if (this.correctType(ball)) {
-        this._hitOwn = true;
-      } else if (ball.number === 8 && this.upToLast()) {
+      if (this.wantsToHit(ball)) {
         this._hitOwn = true;
       }
     });
@@ -234,6 +230,11 @@ class Game {
     } else {
       return 1 - this._firstPlayerType;
     }
+  }
+
+  wantsToHit(ball) {
+    return this._firstPlayerType === null || this.correctType(ball) ||
+      (ball.number === 8 && this.upToLast());
   }
 
   _sinkWhite() {

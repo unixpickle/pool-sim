@@ -25,4 +25,5 @@ Here's what's done so far:
 
  * A physics simulator
  * A set of rules implemented on top of the physics simulator
- * A demo that shows two random agents playing one another
+ * A few basic agents
+ * A demo that shows an agent playing against itself
