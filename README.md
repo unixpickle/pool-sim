@@ -2,6 +2,8 @@
 
 A simulator for the game [Pool](https://en.wikipedia.org/wiki/Pool_(cue_sports)).
 
+![Short clip of the simulator in action](screenshot/table.gif)
+
 # Goal
 
 The ultimate goal is to be able to simulate games between various types of agents. The agents may include:
