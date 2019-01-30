@@ -566,7 +566,7 @@ class Action {
     throw new Error('not implemented');
   }
 
-  static sample() {
+  static sample(game) {
     throw new Error('not implemented');
   }
 }
@@ -582,7 +582,7 @@ class ShootAction extends Action {
     return 'Shoot(angle=' + this.angle + ', power=' + this.power + ')';
   }
 
-  static sample() {
+  static sample(game) {
     return new ShootAction(Math.random() * Math.PI * 2, Math.random());
   }
 }
@@ -595,7 +595,7 @@ class ShootScratchAction extends ShootAction {
     }
   }
 
-  static sample() {
+  static sample(game) {
     return new ShootScratchAction(-Math.random() * Math.PI, Math.random());
   }
 }
@@ -611,13 +611,18 @@ class PlaceAction extends Action {
     return 'Place(x=' + this.x + ', ' + this.y + ')';
   }
 
-  static sample() {
+  static sample(game) {
     const minX = 0.1;
     const maxX = TABLE_WIDTH - 0.1;
     const minY = 0.8;
     const maxY = 0.95;
-    return new PlaceAction(Math.random() * (maxX - minX) + minX,
-      Math.random() * (maxY - minY) + minY);
+    while (true) {
+      const x = Math.random() * (maxX - minX) + minX;
+      const y = Math.random() * (maxY - minY) + minY;
+      if (!game.table.liveBalls.some((b) => b.distance({ x: x, y: y }) <= BALL_RADIUS)) {
+        return new PlaceAction(x, y);
+      }
+    }
   }
 }
 
@@ -631,7 +636,7 @@ class PickPocketAction extends Action {
     return 'PickPocket(index=' + this.index + ')';
   }
 
-  static sample() {
+  static sample(game) {
     return new PickPocketAction(Math.min(5, Math.floor(Math.random() * 6)));
   }
 }
@@ -809,13 +814,13 @@ class Game {
 
 class RandomAgent {
   pickAction(game) {
-    return game.actionType().sample();
+    return game.actionType().sample(game);
   }
 }
 
 class FastRandomAgent {
   pickAction(game) {
-    const action = game.actionType().sample();
+    const action = game.actionType().sample(game);
     if (action instanceof ShootAction) {
       action.power = 1;
     }

@@ -6,13 +6,13 @@ class Agent {
 
 class RandomAgent {
   pickAction(game) {
-    return game.actionType().sample();
+    return game.actionType().sample(game);
   }
 }
 
 class FastRandomAgent {
   pickAction(game) {
-    const action = game.actionType().sample();
+    const action = game.actionType().sample(game);
     if (action instanceof ShootAction) {
       action.power = 1;
     }
