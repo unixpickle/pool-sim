@@ -10,6 +10,7 @@ from data import BALL_VEC_SIZE
 
 class Model(nn.Module):
     def __init__(self):
+        super().__init__()
         self.ball_net = nn.Sequential(
             nn.Linear(BALL_VEC_SIZE, 512),
             nn.Tanh(),
