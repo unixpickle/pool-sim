@@ -8,6 +8,7 @@
         "url": "http://github.com/unixpickle"
     },
     "bin": {
-        "evaluate": "./evaluate.js"
+        "evaluate": "./evaluate.js",
+        "make_data": "./make_data.js"
     }
 }
