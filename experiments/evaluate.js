@@ -39,7 +39,7 @@ function runAverage() {
       }
     });
     ++count;
-    console.log('');
+    console.log('--- after ' + count + ' games ---');
     Object.keys(sum).sort().forEach((key) => {
       console.log(key + ': ' + sum[key] / count);
     });
