@@ -11,17 +11,17 @@ from data import BALL_VEC_SIZE
 class Model(nn.Module):
     def __init__(self):
         self.ball_net = nn.Sequential(
-            nn.Dense(BALL_VEC_SIZE, 512),
+            nn.Linear(BALL_VEC_SIZE, 512),
             nn.Tanh,
-            nn.Dense(512, 512),
+            nn.Linear(512, 512),
             nn.Tanh,
-            nn.Dense(512, 256),
+            nn.Linear(512, 256),
             nn.Tanh,
         )
-        self.shoot_net = nn.Dense(256, 3)
-        self.scratch_net = nn.Dense(256, 3)
-        self.place_net = nn.Dense(256, 2)
-        self.pick_net = nn.Dense(256, 6)
+        self.shoot_net = nn.Linear(256, 3)
+        self.scratch_net = nn.Linear(256, 3)
+        self.place_net = nn.Linear(256, 2)
+        self.pick_net = nn.Linear(256, 6)
 
     def forward(self, states):
         """
