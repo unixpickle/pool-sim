@@ -27,3 +27,4 @@ Here's what's done so far:
  * A set of rules implemented on top of the physics simulator
  * A few basic agents
  * A demo that shows an agent playing against itself
+ * A script to match off two agents repeatedly

@@ -1,0 +1,13 @@
+{
+    "name": "experiments",
+    "license": "BSD-3-Clause",
+    "version": "0.0.1",
+    "author": {
+        "name": "Alex Nichol",
+        "email": "unixpickle@gmail.com",
+        "url": "http://github.com/unixpickle"
+    },
+    "bin": {
+        "evaluate": "./evaluate.js"
+    }
+}
