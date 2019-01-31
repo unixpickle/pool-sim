@@ -5,7 +5,7 @@ A model for cloning a Pool agent.
 import torch
 import torch.nn as nn
 
-BALL_VEC_SIZE = 18
+from data import BALL_VEC_SIZE
 
 
 class Model(nn.Module):
