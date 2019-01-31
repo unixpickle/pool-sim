@@ -12,11 +12,11 @@ class Model(nn.Module):
     def __init__(self):
         self.ball_net = nn.Sequential(
             nn.Linear(BALL_VEC_SIZE, 512),
-            nn.Tanh,
+            nn.Tanh(),
             nn.Linear(512, 512),
-            nn.Tanh,
+            nn.Tanh(),
             nn.Linear(512, 256),
-            nn.Tanh,
+            nn.Tanh(),
         )
         self.shoot_net = nn.Linear(256, 3)
         self.scratch_net = nn.Linear(256, 3)
