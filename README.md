@@ -4,20 +4,14 @@ A simulator for the game [Pool](https://en.wikipedia.org/wiki/Pool_(cue_sports))
 
 ![Short clip of the simulator in action](screenshot/table.gif)
 
-# Goal
+# Results
 
-The ultimate goal is to be able to simulate games between various types of agents. The agents may include:
+I implemented several different agents, including a random search agent. Here are some statistics about matches between these agents:
 
- * Random agent
- * An agent that tries N random choices and chooses the "best" one.
- * An agent that aims perfectly for one of its balls.
- * An agent optimized with reinforcement learning.
-
-Once we can simulate games, we can gather various statistics, such as:
-
- * Win rate of one agent vs. another
- * Average move count in a game
- * Average number of scratches per game
+| Player 0     | Player 1     | Mean Winner    | Turns | Scratches | Live Balls |
+|--------------|--------------|----------------|-------|-----------|------------|
+| Search       | AimClosest   | 0.024          | 30.7  | 2.20      | 3.36       |
+| Search       | Search       | 0.521          | 30.4  | 2.31      | 0.54       |
 
 # Status
 

@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional as F
 
 
-def mean_loss(model_out, actions):
+def clone_loss(model_out, actions):
     """
     Compute the loss of the model given the actual actions
     that were taken. Irrelevant heads are not used.
