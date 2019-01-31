@@ -996,6 +996,7 @@ const exported = {
 
   Action: Action,
   ShootAction: ShootAction,
+  ShootScratchAction: ShootScratchAction,
   PlaceAction: PlaceAction,
   PickPocketAction: PickPocketAction,
   Game: Game,

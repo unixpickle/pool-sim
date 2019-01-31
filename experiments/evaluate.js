@@ -11,17 +11,23 @@ const agent2 = new poolsim[process.argv[3]]();
 function runGame() {
   const game = new poolsim.Game();
   let numTurns = 0;
+  let numScratches = -1;
   while (game.winner() === null) {
     const agent = (game.turn() === 0 ? agent1 : agent2);
     while (game.actionType() !== null) {
       const action = agent.pickAction(game);
+      if (action instanceof poolsim.ShootScratchAction) {
+        ++numScratches;
+      }
       game.act(action);
     }
     game.stepFully();
     ++numTurns;
   }
   return {
-    numTurns: numTurns,
+    turns: numTurns,
+    scratches: numScratches,
+    liveBalls: game.table.liveBalls.filter((b) => b.number > 0).length,
     winner: game.winner(),
   };
 }
@@ -39,7 +45,7 @@ function runAverage() {
       }
     });
     ++count;
-    console.log('--- after ' + count + ' games ---');
+    console.log('--- after ' + count + ' game(s) ---');
     Object.keys(sum).sort().forEach((key) => {
       console.log(key + ': ' + sum[key] / count);
     });
