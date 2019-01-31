@@ -47,6 +47,7 @@
         if (game.actionType() === null) {
           if (game.step(1 / 24)) {
             turnPause = 24;
+            drawTable(game);
             return;
           }
         } else {
