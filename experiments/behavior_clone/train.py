@@ -4,6 +4,7 @@ Train a behavior cloning model.
 
 import argparse
 
+import torch
 import torch.optim as optim
 
 from data import load_data
@@ -13,11 +14,16 @@ from model import Model
 
 def main():
     args = arg_parser().parse_args()
+
+    device = torch.device(args.device)
+
     model = Model()
+    model.to(device)
+
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    train_data = load_data(args.train, args.batch)
-    test_data = load_data(args.test, args.batch)
+    train_data = load_data(args.train, args.batch, device)
+    test_data = load_data(args.test, args.batch, device)
 
     for (train_samples, train_actions), (test_samples, test_actions) in zip(train_data, test_data):
         train_out = model(train_samples)
@@ -37,6 +43,7 @@ def arg_parser():
     parser.add_argument('--path', help='path to save model', default='model.pt')
     parser.add_argument('--lr', help='Adam learning rate', default=0.001, type=float)
     parser.add_argument('--batch', help='SGD batch size', default=16, type=int)
+    parser.add_argument('--device', help='Torch device', default='cpu')
     parser.add_argument('train', help='training data path')
     parser.add_argument('test', help='testing data path')
     return parser

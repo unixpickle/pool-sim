@@ -26,7 +26,7 @@ def load_data(path, batch_size, device):
     batch_actions = []
     while True:
         for datum in load_raw_data(path):
-            sample_vecs = np.array([ball_vector(b) for b in datum['live']])
+            sample_vecs = np.array([ball_vector(b) for b in datum['live']], dtype=np.float32)
             batch_samples.append(torch.from_numpy(sample_vecs).to(device))
             batch_actions.append(datum['action'])
             if len(batch_samples) == batch_size:

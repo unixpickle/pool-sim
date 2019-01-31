@@ -59,7 +59,7 @@ class Model(nn.Module):
             state_balls = ball_vecs[idx:idx + state.shape[0]]
             state_vecs.append(torch.max(state_balls, 0)[0])
             idx += state.shape[0]
-        return torch.cat(state_vecs)
+        return torch.stack(state_vecs)
 
     def shoot(self, state_vecs):
         params = self.shoot_net(state_vecs)
@@ -72,8 +72,8 @@ class Model(nn.Module):
 
     def place(self, state_vecs):
         params = self.place_net(state_vecs)
-        x = torch.sigmoid(params[0]) * 0.5
-        y = torch.sigmoid(params[1]) * 0.2 + 0.8
+        x = torch.sigmoid(params[:, 0]) * 0.5
+        y = torch.sigmoid(params[:, 1]) * 0.2 + 0.8
         return torch.stack([x, y], dim=1)
 
     def pick(self, state_vecs):
