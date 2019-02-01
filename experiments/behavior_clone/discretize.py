@@ -30,7 +30,7 @@ class ActionDiscretizer:
 
     @property
     def num_scratch_angles(self):
-        return len([x for x in self.angles if x < 0])
+        return len(self._scratch_angles())
 
     @property
     def num_places(self):
@@ -45,15 +45,21 @@ class ActionDiscretizer:
                 closest = i
         return closest
 
+    def undiscretize_angle(self, disc):
+        return self.angles[disc]
+
     def discretize_scratch_angle(self, angle):
         closest = None
         dist = 10000
         i = 0
-        for i, x in enumerate(x for x in self.angles if x < 0):
+        for i, x in enumerate(self._scratch_angles()):
             if abs(x - angle) < dist:
                 dist = abs(x - angle)
                 closest = i
         return closest
+
+    def undiscretize_scratch_angle(self, disc):
+        return self._scratch_angles()[disc]
 
     def discretize_place(self, x, y):
         closest = None
@@ -64,3 +70,9 @@ class ActionDiscretizer:
                 dist = d
                 closest = i
         return closest
+
+    def undiscretize_place(self, disc):
+        return self.places[disc]
+
+    def _scratch_angles(self):
+        return [x for x in self.angles if x < 0]
