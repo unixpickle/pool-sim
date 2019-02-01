@@ -7,6 +7,26 @@ class Action {
   static sample(game) {
     throw new Error('not implemented');
   }
+
+  serialize() {
+    const res = { type: this.constructor.name };
+    Object.keys(this).forEach((k) => res[k] = this[k]);
+    return res;
+  }
+
+  static deserialize(object) {
+    if (object.type === 'ShootAction') {
+      return new ShootAction(object.angle, object.power);
+    } else if (object.type === 'ShootScratchAction') {
+      return new ShootScratchAction(object.angle, object.power);
+    } else if (object.type === 'PlaceAction') {
+      return new PlaceAction(object.x, object.y);
+    } else if (object.type === 'PickPocketAction') {
+      return new PickPocketAction(object.index);
+    } else {
+      throw new Error('unknown type: ' + object.type);
+    }
+  }
 }
 
 class ShootAction extends Action {
@@ -110,6 +130,12 @@ class Game {
       '_guessedPocket', '_shootScratch'];
     fields.forEach((k) => res[k] = this[k]);
     return res;
+  }
+
+  serialize() {
+    return this.table.liveBalls.map((b) => {
+      return { number: b.number, x: b.x, y: b.y };
+    });
   }
 
   winner() {
