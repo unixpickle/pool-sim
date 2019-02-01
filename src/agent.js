@@ -59,12 +59,13 @@ class SearchAgent extends Agent {
     super();
     this.chooser = chooser || new FastRandomAgent();
     this.numChoices = numChoices || 10;
+    this.useAim = true;
   }
 
   pickAction(game) {
     let bestChoice = null;
     let bestHeuristic = -Infinity;
-    for (let i = -1; i < this.numChoices; ++i) {
+    for (let i = this.useAim ? -1 : 0; i < this.numChoices; ++i) {
       const clone = game.clone();
       const choice = this.generateChoice(clone, i === -1 ? new AimClosestAgent() : null);
       const heuristic = this.heuristic(clone, game.turn());
@@ -110,5 +111,56 @@ class SearchAgent extends Agent {
     } else {
       return -goodness;
     }
+  }
+}
+
+class DiscreteRandomAgent extends Agent {
+  constructor() {
+    super();
+    this.angleChoices = [];
+    this.placeChoices = [];
+    for (let y = 0.8; y <= 0.9; y += 0.05) {
+      for (let x = 0.1; x <= TABLE_WIDTH - 0.1; x += 0.1) {
+        this.placeChoices.push([x, y]);
+      }
+    }
+    for (let i = 0; i < 64; ++i) {
+      this.angleChoices.push((i - 32) * Math.PI * 2 / 64);
+    }
+  }
+
+  pickAction(game) {
+    if (game.actionType() === ShootAction) {
+      return new ShootAction(this._randomAngle(), 1);
+    } else if (game.actionType() === ShootScratchAction) {
+      while (true) {
+        const angle = this._randomAngle();
+        if (angle < 0) {
+          return new ShootScratchAction(angle, 1);
+        }
+      }
+    } else if (game.actionType() === PickPocketAction) {
+      return PickPocketAction.sample();
+    } else if (game.actionType() === PlaceAction) {
+      const [x, y] = this._randomPlace();
+      return new PlaceAction(x, y);
+    }
+  }
+
+  _randomAngle() {
+    const idx = Math.floor(Math.random() * this.angleChoices.length);
+    return this.angleChoices[Math.min(idx, this.angleChoices.length - 1)];
+  }
+
+  _randomPlace() {
+    const idx = Math.floor(Math.random() * this.placeChoices.length);
+    return this.placeChoices[Math.min(idx, this.placeChoices.length - 1)];
+  }
+}
+
+class DiscreteSearchAgent extends SearchAgent {
+  constructor(numChoices) {
+    super(new DiscreteRandomAgent(), numChoices || 10);
+    this.useAim = false;
   }
 }

@@ -29,6 +29,7 @@ const exported = {
   FastRandomAgent: FastRandomAgent,
   AimClosestAgent: AimClosestAgent,
   SearchAgent: SearchAgent,
+  DiscreteSearchAgent: DiscreteSearchAgent,
 };
 
 if ('undefined' !== typeof window) {
