@@ -36,6 +36,7 @@ def main():
         optimizer.step()
 
         print('test_loss=%f train_loss=%f' % (test_loss.item(), train_loss.item()))
+        torch.save(model.state_dict(), args.path)
 
 
 def arg_parser():
