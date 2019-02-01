@@ -12,6 +12,7 @@ I implemented several different agents, including a random search agent. Here ar
 |--------------|--------------|----------------|-------|-----------|------------|
 | Search       | AimClosest   | 0.024          | 30.7  | 2.20      | 3.36       |
 | Search       | Search       | 0.521          | 30.4  | 2.31      | 0.54       |
+| FastRandom   | Random       | 0.802          | 84.5  | 57.1      | 6.70       |
 
 # Status
 
