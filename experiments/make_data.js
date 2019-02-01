@@ -1,6 +1,6 @@
 const poolsim = require('../build/poolsim.js');
 
-const agent = new poolsim.SearchAgent(new poolsim.RandomAgent(), 100);
+const agent = new poolsim.DiscreteSearchAgent(100);
 
 function outputDatum(game, action) {
   const liveBalls = game.table.liveBalls.map((b) => {

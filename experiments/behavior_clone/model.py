@@ -6,6 +6,9 @@ import torch
 import torch.nn as nn
 
 from data import BALL_VEC_SIZE
+from discretize import ActionDiscretizer
+
+NUM_POCKETS = 6
 
 
 class Model(nn.Module):
@@ -19,10 +22,11 @@ class Model(nn.Module):
             nn.Linear(512, 256),
             nn.Tanh(),
         )
-        self.shoot_net = nn.Linear(256, 3)
-        self.scratch_net = nn.Linear(256, 3)
-        self.place_net = nn.Linear(256, 2)
-        self.pick_net = nn.Linear(256, 6)
+        disc = ActionDiscretizer()
+        self.shoot_net = nn.Linear(256, disc.num_angles)
+        self.scratch_net = nn.Linear(256, disc.num_scratch_angles)
+        self.place_net = nn.Linear(256, disc.num_places)
+        self.pick_net = nn.Linear(256, NUM_POCKETS)
 
     def forward(self, states):
         """
@@ -37,13 +41,13 @@ class Model(nn.Module):
 
         Returns:
             A tuple (shoot, scratch, place, pick):
-              shoot: a batch of (x, y, power).
-              scratch: a batch of (x, y, power).
-              place: a batch of (x, y).
-              pick: a batch of logits with 6 options.
+              shoot: a batch of angle logits.
+              scratch: a batch of scratch angle logits.
+              place: a batch of placement logits.
+              pick: a batch of pocket logits.
         """
         v = self.encode_states(states)
-        return self.shoot(v), self.scratch(v), self.place(v), self.pick(v)
+        return self.shoot_net(v), self.scratch_net(v), self.place_net(v), self.pick_net(v)
 
     def encode_states(self, states):
         """
@@ -60,21 +64,3 @@ class Model(nn.Module):
             state_vecs.append(torch.max(state_balls, 0)[0])
             idx += state.shape[0]
         return torch.stack(state_vecs)
-
-    def shoot(self, state_vecs):
-        params = self.shoot_net(state_vecs)
-        return torch.cat([params[:, :2], torch.sigmoid(params[:, 2:])], dim=1)
-
-    def scratch(self, state_vecs):
-        params = self.scratch_net(state_vecs)
-        return torch.cat([params[:, :1], -torch.exp(params[:, 1:2]),
-                          torch.sigmoid(params[:, 2:])], dim=1)
-
-    def place(self, state_vecs):
-        params = self.place_net(state_vecs)
-        x = torch.sigmoid(params[:, 0]) * 0.5
-        y = torch.sigmoid(params[:, 1]) * 0.2 + 0.8
-        return torch.stack([x, y], dim=1)
-
-    def pick(self, state_vecs):
-        return self.pick_net(state_vecs)
