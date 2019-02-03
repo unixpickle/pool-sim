@@ -55,13 +55,21 @@ class Ball extends Particle {
     if (ball === this) {
       return null;
     }
-    const dist = Math.sqrt(Math.pow(this.x - ball.x, 2) + Math.pow(this.y - ball.y, 2));
-    if (dist >= this.radius + ball.radius) {
-      return null;
-    }
+
     const normalX = ball.x - this.x;
     const normalY = ball.y - this.y;
-    const invMag = 1 / Math.sqrt(Math.pow(normalX, 2) + Math.pow(normalY, 2));
+    const thresh = this.radius + ball.radius;
+
+    // Heuristic to prune out most checks.
+    if (normalX >= thresh || normalX <= -thresh || normalY >= thresh || normalY <= -thresh) {
+      return null;
+    }
+
+    const dist = Math.sqrt(Math.pow(normalX, 2) + Math.pow(normalY, 2));
+    if (dist >= thresh) {
+      return null;
+    }
+    const invMag = 1 / dist;
     return new Collision([invMag * normalX, invMag * normalY]);
   }
 
