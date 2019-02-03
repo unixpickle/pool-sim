@@ -25,6 +25,7 @@ def main():
     train_data = load_data(args.train, args.batch, device)
     test_data = load_data(args.test, args.batch, device)
 
+    i = 0
     for (train_samples, train_actions), (test_samples, test_actions) in zip(train_data, test_data):
         train_out = model(train_samples)
         test_out = model(test_samples)
@@ -35,8 +36,9 @@ def main():
         train_loss.backward()
         optimizer.step()
 
-        print('test_loss=%f train_loss=%f' % (test_loss.item(), train_loss.item()))
+        print('iter %d: test_loss=%f train_loss=%f' % (i, test_loss.item(), train_loss.item()))
         torch.save(model.state_dict(), args.path)
+        i += 1
 
 
 def arg_parser():
