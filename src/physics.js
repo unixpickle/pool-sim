@@ -73,14 +73,14 @@ class PhysicsVector {
     return this;
   }
 
-  addTo(particles) {
+  addTo(particles, s) {
     particles.forEach((p, i) => {
       const pos = this.positions[i];
-      p.x += pos[0];
-      p.y += pos[1];
+      p.x += pos[0] * s;
+      p.y += pos[1] * s;
       const vel = this.velocities[i];
-      p.vx += vel[0];
-      p.vy += vel[1];
+      p.vx += vel[0] * s;
+      p.vy += vel[1] * s;
     });
   }
 
@@ -99,29 +99,28 @@ class PhysicsVector {
 // Perform a step of Euler's method on the system.
 function eulerStep(particles, field, dt) {
   const delta = PhysicsVector.fromDerivative(particles, field);
-  delta.scale(dt);
-  delta.addTo(particles);
+  delta.addTo(particles, dt);
 }
 
 // Perform a step of the RK4 method on the system.
 function rk4Step(particles, field, dt) {
-  const k1 = PhysicsVector.fromDerivative(particles, field).scale(dt);
+  const k1 = PhysicsVector.fromDerivative(particles, field);
   const k2 = withBackup(particles, () => {
-    k1.copy().scale(0.5).addTo(particles);
-    return PhysicsVector.fromDerivative(particles, field).scale(dt);
+    k1.addTo(particles, 0.5 * dt);
+    return PhysicsVector.fromDerivative(particles, field);
   });
   const k3 = withBackup(particles, () => {
-    k2.copy().scale(0.5).addTo(particles);
-    return PhysicsVector.fromDerivative(particles, field).scale(dt);
+    k2.addTo(particles, 0.5 * dt);
+    return PhysicsVector.fromDerivative(particles, field);
   })
   const k4 = withBackup(particles, () => {
-    k3.addTo(particles);
-    return PhysicsVector.fromDerivative(particles, field).scale(dt);
+    k3.addTo(particles, dt);
+    return PhysicsVector.fromDerivative(particles, field);
   })
-  k1.scale(1 / 6).addTo(particles);
-  k2.scale(2 / 6).addTo(particles);
-  k3.scale(2 / 6).addTo(particles);
-  k4.scale(1 / 6).addTo(particles);
+  k1.addTo(particles, dt / 6);
+  k2.addTo(particles, dt * 2 / 6);
+  k3.addTo(particles, dt * 2 / 6);
+  k4.addTo(particles, dt / 6);
 }
 
 function withBackup(particles, f) {
