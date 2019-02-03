@@ -198,7 +198,14 @@ class TriangleBarrier extends Barrier {
 
   collision(ball) {
     // Heuristic to prune out most checks.
-    if (ball.distance(this.midpoint) > this.radius + ball.radius) {
+    const thresh = this.radius + ball.radius;
+    if (Math.abs(ball.x - this.midpoint.x) > thresh) {
+      return null;
+    }
+    if (Math.abs(ball.y - this.midpoint.y) > thresh) {
+      return null;
+    }
+    if (ball.distance(this.midpoint) > thresh) {
       return null;
     }
 
