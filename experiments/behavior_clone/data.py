@@ -44,10 +44,11 @@ def load_raw_data(path):
           is a data-point.
     """
     with open(path, 'rt') as in_path:
-        doc = in_path.readline().rstrip()
-        if doc == '':
-            return
-        yield json.loads(doc)
+        while True:
+            doc = in_path.readline().rstrip()
+            if doc == '':
+                return
+            yield json.loads(doc)
 
 
 def ball_vector(ball):
