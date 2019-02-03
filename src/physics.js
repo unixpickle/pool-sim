@@ -50,14 +50,9 @@ class PhysicsVector {
   }
 
   static fromDerivative(particles, field) {
-    const positions = [];
-    const velocities = [];
+    const positions = particles.map((p) => [p.vx, p.vy]);
     const forces = field.forces(particles);
-    particles.forEach((p, i) => {
-      positions.push([p.vx, p.vy]);
-      velocities.push(forces[i]);
-    });
-    return new PhysicsVector(positions, velocities);
+    return new PhysicsVector(positions, forces);
   }
 
   copy() {
