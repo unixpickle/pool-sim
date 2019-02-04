@@ -63,7 +63,11 @@ class SearchAgent extends Agent {
   }
 
   pickAction(game) {
-    let bestChoice = null;
+    return this.pickActions(game)[0];
+  }
+
+  pickActions(game) {
+    let bestChoice = [];
     let bestHeuristic = -Infinity;
     for (let i = this.useAim ? -1 : 0; i < this.numChoices; ++i) {
       const clone = game.clone();
@@ -71,7 +75,9 @@ class SearchAgent extends Agent {
       const heuristic = this.heuristic(clone, game.turn());
       if (heuristic > bestHeuristic) {
         bestHeuristic = heuristic;
-        bestChoice = choice;
+        bestChoice = [choice];
+      } else if (heuristic === bestHeuristic) {
+        bestChoice.push(choice);
       }
     }
     return bestChoice;

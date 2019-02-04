@@ -13,9 +13,9 @@ function runGame() {
   const game = new poolsim.Game();
   while (game.winner() === null) {
     while (game.actionType() !== null) {
-      const action = agent.pickAction(game);
-      outputDatum(game, action);
-      game.act(action);
+      const actions = agent.pickActions(game);
+      actions.forEach((action) => outputDatum(game, action));
+      game.act(actions[0]);
     }
     game.stepFully();
   }
