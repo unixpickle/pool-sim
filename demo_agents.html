@@ -25,46 +25,50 @@
     <label id="winner-label"></label>
 
     <script>
-    let interval = null;
+    let currentGame = null;
 
-    function startGame() {
-      if (interval !== null) {
-        clearInterval(interval);
-      }
+    async function startGame() {
       document.getElementById('winner-label').textContent = '';
 
       const game = new poolsim.Game();
       const ctor = poolsim[document.getElementById('agent').value];
       const agent = new ctor();
-      let turnPause = 0;
-      interval = setInterval(() => {
-        if (--turnPause > 0) {
-          return;
-        }
+
+      currentGame = game;
+      while (currentGame === game) {
         if (game.winner() !== null) {
           gameOver(game);
           return;
         }
+        const start = new Date().getTime();
         if (game.actionType() === null) {
-          if (game.step(1 / 24)) {
-            turnPause = 24;
-            drawTable(game);
-            return;
+          const res = game.step(1 / 24);
+          drawTable(game);
+          if (res) {
+            // Gap after turn is over.
+            await sleep(1);
+            continue;
           }
         } else {
-          const act = agent.pickAction(game);
+          const act = await agent.pickAction(game);
           console.log(act.toString());
           game.act(act);
+          drawTable(game);
         }
-        drawTable(game);
         updateStats(game);
-      }, 1000 / 24);
+        await sleep(1 / 24 - (new Date().getTime() - start) / 1000);
+      }
+    }
+
+    function sleep(delay) {
+      return new Promise((resolve) => {
+        setTimeout(resolve, Math.max(0, delay * 1000));
+      })
     }
 
     function gameOver(game) {
       document.getElementById('winner-label').textContent = 'Winner: ' + game.winner();
-      clearInterval(interval);
-      interval = null;
+      currentGame = null;
     }
 
     function drawTable(game) {

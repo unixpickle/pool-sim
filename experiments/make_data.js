@@ -9,11 +9,11 @@ function outputDatum(game, action) {
   }) + '\n');
 }
 
-function runGame() {
+async function runGame() {
   const game = new poolsim.Game();
   while (game.winner() === null) {
     while (game.actionType() !== null) {
-      const actions = agent.pickActions(game);
+      const actions = await agent.pickActions(game);
       actions.forEach((action) => outputDatum(game, action));
       game.act(actions[0]);
     }
@@ -21,6 +21,10 @@ function runGame() {
   }
 }
 
-while (true) {
-  runGame();
+async function main() {
+  while (true) {
+    await runGame();
+  }
 }
+
+main();

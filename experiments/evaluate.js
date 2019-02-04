@@ -8,14 +8,14 @@ if (process.argv.length !== 4) {
 const agent1 = new poolsim[process.argv[2]]();
 const agent2 = new poolsim[process.argv[3]]();
 
-function runGame() {
+async function runGame() {
   const game = new poolsim.Game();
   let numTurns = 0;
   let numScratches = -1;
   while (game.winner() === null) {
     const agent = (game.turn() === 0 ? agent1 : agent2);
     while (game.actionType() !== null) {
-      const action = agent.pickAction(game);
+      const action = await agent.pickAction(game);
       if (action instanceof poolsim.ShootScratchAction) {
         ++numScratches;
       }
@@ -32,11 +32,11 @@ function runGame() {
   };
 }
 
-function runAverage() {
+async function runAverage() {
   const sum = {};
   let count = 0;
   while (true) {
-    const result = runGame();
+    const result = await runGame();
     Object.keys(result).forEach((key) => {
       if (!sum.hasOwnProperty(key)) {
         sum[key] = result[key];

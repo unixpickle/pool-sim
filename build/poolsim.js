@@ -903,7 +903,7 @@ class Game {
 
 class RandomAgent extends Agent {
   pickAction(game) {
-    return game.actionType().sample(game);
+    return Promise.resolve(game.actionType().sample(game));
   }
 }
 
@@ -913,13 +913,13 @@ class FastRandomAgent extends Agent {
     if (action instanceof ShootAction) {
       action.power = 1;
     }
-    return action;
+    return Promise.resolve(action);
   }
 }
 
 class AimClosestAgent extends FastRandomAgent {
-  pickAction(game) {
-    const action = super.pickAction(game);
+  async pickAction(game) {
+    const action = await super.pickAction(game);
     let closestBall = null;
     if (action instanceof ShootScratchAction) {
       closestBall = this.closestBall(game, true);
@@ -959,16 +959,17 @@ class SearchAgent extends Agent {
     this.useAim = true;
   }
 
-  pickAction(game) {
-    return this.pickActions(game)[0];
+  async pickAction(game) {
+    const actions = await this.pickActions(game);
+    return actions[0];
   }
 
-  pickActions(game) {
+  async pickActions(game) {
     let bestChoice = [];
     let bestHeuristic = -Infinity;
     for (let i = this.useAim ? -1 : 0; i < this.numChoices; ++i) {
       const clone = game.clone();
-      const choice = this.generateChoice(clone, i === -1 ? new AimClosestAgent() : null);
+      const choice = await this.generateChoice(clone, i === -1 ? new AimClosestAgent() : null);
       const heuristic = this.heuristic(clone, game.turn());
       if (heuristic > bestHeuristic) {
         bestHeuristic = heuristic;
@@ -980,10 +981,10 @@ class SearchAgent extends Agent {
     return bestChoice;
   }
 
-  generateChoice(game, chooser) {
+  async generateChoice(game, chooser) {
     const actions = [];
     while (game.actionType() !== null) {
-      const action = (chooser || this.chooser).pickAction(game);
+      const action = await (chooser || this.chooser).pickAction(game);
       actions.push(action);
       game.act(action);
     }
@@ -1034,19 +1035,19 @@ class DiscreteRandomAgent extends Agent {
 
   pickAction(game) {
     if (game.actionType() === ShootAction) {
-      return new ShootAction(this._randomAngle(), 1);
+      return Promise.resolve(new ShootAction(this._randomAngle(), 1));
     } else if (game.actionType() === ShootScratchAction) {
       while (true) {
         const angle = this._randomAngle();
         if (angle < 0) {
-          return new ShootScratchAction(angle, 1);
+          return Promise.resolve(new ShootScratchAction(angle, 1));
         }
       }
     } else if (game.actionType() === PickPocketAction) {
-      return PickPocketAction.sample();
+      return Promise.resolve(PickPocketAction.sample());
     } else if (game.actionType() === PlaceAction) {
       const [x, y] = this._randomPlace();
-      return new PlaceAction(x, y);
+      return Promise.resolve(new PlaceAction(x, y));
     }
   }
 
