@@ -185,6 +185,26 @@ class RemoteAgent extends Agent {
   }
 
   makeRequest(reqJSON) {
+    if ('undefined' === typeof module) {
+      return this.makeRequestBrowser(reqJSON);
+    } else {
+      return this.makeRequestNode(reqJSON);
+    }
+  }
+
+  async makeRequestBrowser(reqJSON) {
+    const response = await fetch(this.endpoint, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: reqJSON,
+    });
+    return response.json();
+  }
+
+  makeRequestNode(reqJSON) {
     // https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/
     // https://stackoverflow.com/questions/6158933/how-to-make-an-http-post-request-in-node-js
     const http = require('http');

@@ -5,8 +5,9 @@ to JS scripts.
 
 import argparse
 import json
+import os
 
-from flask import Flask, request
+from flask import Flask, request, send_file
 import numpy as np
 import torch
 
@@ -15,6 +16,20 @@ from discretize import ActionDiscretizer
 from model import Model
 
 app = Flask(__name__)
+
+
+@app.route('/')
+def root():
+    return send_file(os.path.join(project_dir(), 'demo_agents.html'))
+
+
+@app.route('/build/poolsim.js')
+def build():
+    return send_file(os.path.join(project_dir(), 'build', 'poolsim.js'))
+
+
+def project_dir():
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 @app.route('/turn', methods=['POST'])
