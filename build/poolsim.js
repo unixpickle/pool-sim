@@ -1068,6 +1068,52 @@ class DiscreteSearchAgent extends SearchAgent {
     this.useAim = false;
   }
 }
+
+class RemoteAgent extends Agent {
+  constructor(endpoint) {
+    this.endpoint = endpoint;
+  }
+
+  async pickAction(game) {
+    const result = await this.makeRequest(JSON.stringify(game.serialize()));
+    const data = result[game.actionType().constructor.name];
+    return Action.deserialize(data);
+  }
+
+  makeRequest(reqJSON) {
+    // https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/
+    // https://stackoverflow.com/questions/6158933/how-to-make-an-http-post-request-in-node-js
+    const http = require('http');
+    return new Promise((resolve, reject) => {
+      const request = http.request(this.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': reqJSON.length,
+        }
+      }, (response) => {
+        if (response.statusCode < 200 || response.statusCode > 299) {
+          reject(new Error('Failed to load page, status code: ' + response.statusCode));
+        }
+        const body = [];
+        response.on('data', (chunk) => body.push(chunk));
+        response.on('end', () => {
+          let parsed = null;
+          try {
+            parsed = JSON.parse(body.join(''));
+          } catch (e) {
+            reject(e);
+            return;
+          }
+          resolve(parsed);
+        });
+      });
+      request.on('error', (err) => reject(err));
+      request.write(reqJSON);
+      request.end();
+    });
+  }
+}
 const exported = {
   Particle: Particle,
   ForceField: ForceField,
@@ -1100,6 +1146,7 @@ const exported = {
   AimClosestAgent: AimClosestAgent,
   SearchAgent: SearchAgent,
   DiscreteSearchAgent: DiscreteSearchAgent,
+  RemoteAgent: RemoteAgent,
 };
 
 if ('undefined' !== typeof window) {

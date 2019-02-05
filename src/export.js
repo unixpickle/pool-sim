@@ -30,6 +30,7 @@ const exported = {
   AimClosestAgent: AimClosestAgent,
   SearchAgent: SearchAgent,
   DiscreteSearchAgent: DiscreteSearchAgent,
+  RemoteAgent: RemoteAgent,
 };
 
 if ('undefined' !== typeof window) {
