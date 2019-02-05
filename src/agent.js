@@ -174,7 +174,7 @@ class DiscreteSearchAgent extends SearchAgent {
 
 class RemoteAgent extends Agent {
   constructor(endpoint) {
-    this.endpoint = endpoint;
+    this.endpoint = endpoint || 'http://localhost:5000';
   }
 
   async pickAction(game) {
