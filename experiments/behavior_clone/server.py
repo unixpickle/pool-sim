@@ -60,7 +60,7 @@ def main():
     parser.add_argument('--path', help='path to model to load', default='model.pt')
     args = parser.parse_args()
 
-    state_dict = torch.load(args.path, map_location=lambda storage, location: 'cpu')
+    state_dict = torch.load(args.path, map_location='cpu')
 
     app.config['model'] = Model()
     app.config['model'].load_state_dict(state_dict)
