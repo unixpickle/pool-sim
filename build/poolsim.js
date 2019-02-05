@@ -1071,12 +1071,13 @@ class DiscreteSearchAgent extends SearchAgent {
 
 class RemoteAgent extends Agent {
   constructor(endpoint) {
-    this.endpoint = endpoint;
+    super();
+    this.endpoint = endpoint || 'http://localhost:5000/turn';
   }
 
   async pickAction(game) {
     const result = await this.makeRequest(JSON.stringify(game.serialize()));
-    const data = result[game.actionType().constructor.name];
+    const data = result[game.actionType().name];
     return Action.deserialize(data);
   }
 

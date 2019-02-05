@@ -17,7 +17,7 @@ from model import Model
 app = Flask(__name__)
 
 
-@app.route('/turn')
+@app.route('/turn', methods=['POST'])
 def turn():
     balls = request.get_json()
     model = app.config['model']
