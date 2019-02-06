@@ -2,6 +2,7 @@
 A model for cloning a Pool agent.
 """
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -23,12 +24,13 @@ class Model(nn.Module):
             nn.Tanh(),
         )
         disc = ActionDiscretizer()
+        self.player_embed = nn.Embedding(3, 256)
         self.shoot_net = nn.Linear(256, disc.num_angles)
         self.scratch_net = nn.Linear(256, disc.num_scratch_angles)
         self.place_net = nn.Linear(256, disc.num_places)
         self.pick_net = nn.Linear(256, NUM_POCKETS)
 
-    def forward(self, states):
+    def forward(self, states, player_types):
         """
         Apply the behavior cloning model to a batch of
         game states.
@@ -38,6 +40,8 @@ class Model(nn.Module):
               is itself a batch of ball vectors. Different
               states may contain different numbers of ball
               vectors.
+            player_types: a sequence of numbers indicating
+              the type of ball we're aiming for.
 
         Returns:
             A tuple (shoot, scratch, place, pick):
@@ -47,6 +51,7 @@ class Model(nn.Module):
               pick: a batch of pocket logits.
         """
         v = self.encode_states(states)
+        v = v + self.encode_player_types(player_types)
         return self.shoot_net(v), self.scratch_net(v), self.place_net(v), self.pick_net(v)
 
     def encode_states(self, states):
@@ -64,3 +69,9 @@ class Model(nn.Module):
             state_vecs.append(torch.max(state_balls, 0)[0])
             idx += state.shape[0]
         return torch.stack(state_vecs)
+
+    def encode_player_types(self, player_types):
+        """
+        Encode the player types for each state.
+        """
+        return self.player_embed(torch.from_numpy(np.array(player_types)))

@@ -34,11 +34,12 @@ def project_dir():
 
 @app.route('/turn', methods=['POST'])
 def turn():
-    balls = request.get_json()
+    datum = request.get_json()
+    balls = datum['live']
     model = app.config['model']
     ball_vecs = np.array([ball_vector(b) for b in balls], dtype=np.float32)
     torch_vecs = torch.from_numpy(ball_vecs)
-    shoot, scratch, place, pick = model([torch_vecs])
+    shoot, scratch, place, pick = model([torch_vecs], [datum['playerType']])
 
     shoot_max = torch.argmax(shoot[0]).item()
     scratch_max = torch.argmax(scratch[0]).item()

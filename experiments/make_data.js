@@ -4,7 +4,7 @@ const agent = new poolsim.DiscreteSearchAgent(100);
 
 function outputDatum(game, action) {
   process.stdout.write(JSON.stringify({
-    live: game.serialize(),
+    game: game.serialize(),
     action: action.serialize(),
   }) + '\n');
 }

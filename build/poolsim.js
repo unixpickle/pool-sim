@@ -740,9 +740,16 @@ class Game {
   }
 
   serialize() {
-    return this.table.liveBalls.map((b) => {
-      return { number: b.number, x: b.x, y: b.y };
-    });
+    let playerType = this.playerType();
+    if (playerType === null) {
+      playerType = 2;
+    }
+    return {
+      live: this.table.liveBalls.map((b) => {
+        return { number: b.number, x: b.x, y: b.y };
+      }),
+      playerType: playerType,
+    };
   }
 
   winner() {

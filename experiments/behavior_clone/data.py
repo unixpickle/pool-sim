@@ -20,18 +20,22 @@ def load_data(path, batch_size, device):
         device: the torch device.
 
     Returns:
-        An iterator over (samples, actions) tuples.
+        An iterator over (samples, types, actions) tuples.
     """
     batch_samples = []
+    batch_types = []
     batch_actions = []
     while True:
         for datum in load_raw_data(path):
-            sample_vecs = np.array([ball_vector(b) for b in datum['live']], dtype=np.float32)
+            sample_vecs = np.array([ball_vector(b) for b in datum['game']['live']],
+                                   dtype=np.float32)
             batch_samples.append(torch.from_numpy(sample_vecs).to(device))
+            batch_types.append(datum['game']['playerType'])
             batch_actions.append(datum['action'])
             if len(batch_samples) == batch_size:
-                yield batch_samples, batch_actions
+                yield batch_samples, batch_types, batch_actions
                 batch_samples = []
+                batch_types = []
                 batch_actions = []
 
 

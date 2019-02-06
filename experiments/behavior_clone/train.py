@@ -26,9 +26,10 @@ def main():
     test_data = load_data(args.test, args.batch, device)
 
     i = 0
-    for (train_samples, train_actions), (test_samples, test_actions) in zip(train_data, test_data):
-        train_out = model(train_samples)
-        test_out = model(test_samples)
+    for obj in zip(train_data, test_data):
+        (train_samples, train_types, train_actions), (test_samples, test_types, test_actions) = obj
+        train_out = model(train_samples, train_types)
+        test_out = model(test_samples, test_types)
         train_loss = clone_loss(train_out, train_actions)
         test_loss = clone_loss(test_out, test_actions)
 
