@@ -51,7 +51,7 @@ class Model(nn.Module):
               pick: a batch of pocket logits.
         """
         v = self.encode_states(states)
-        v = v + self.encode_player_types(player_types)
+        v = v + self.encode_player_types(player_types, v.device)
         return self.shoot_net(v), self.scratch_net(v), self.place_net(v), self.pick_net(v)
 
     def encode_states(self, states):
@@ -70,8 +70,8 @@ class Model(nn.Module):
             idx += state.shape[0]
         return torch.stack(state_vecs)
 
-    def encode_player_types(self, player_types):
+    def encode_player_types(self, player_types, device):
         """
         Encode the player types for each state.
         """
-        return self.player_embed(torch.from_numpy(np.array(player_types)))
+        return self.player_embed(torch.from_numpy(np.array(player_types)).to(device))
